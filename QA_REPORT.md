@@ -1,8 +1,9 @@
 # QA_REPORT — 호탐 모션 프로토타입
 
-> v1.0 · 2026-08-19 · 작성: Claude · 상태: final
-> 기준 문서: `PROTO_SPEC.md` v1.0.0 (단일 소스) · 디자인 기준: Figma `BXMdfHOhPcmpD5W874jeOS` (호탐 UI2)
-> 실행: `npx serve .` 또는 `python3 -m http.server 8899` 후 `http://localhost:8899/index.html`
+> v1.1 · 2026-08-19 · 작성: Claude · 상태: final
+> 기준 문서: `PROTO_SPEC.md` v1.0.0 + `handoff_모션가이드_개발.md` v1.0.0 · 디자인 기준: Figma `BXMdfHOhPcmpD5W874jeOS` (호탐 UI2)
+> **배포:** https://jeonju-park.github.io/hotam-motion-prototype/ · 저장소 https://github.com/Jeonju-Park/hotam-motion-prototype (public)
+> 로컬 실행: `npx serve .` 후 `http://localhost:3000/index.html`
 
 ---
 
@@ -106,8 +107,82 @@
 |---|---|---|
 | U1 | 피그마 전 페이지 크롭 대조 | 노드 ID가 제공된 8개 노드만 접근 가능. 페이지 목록은 여전히 `Cover`만 노출되어 미제공 화면(랭킹 S11·프로필 S10·알림 S12·검색 S15 등)은 대조하지 못했다. 해당 화면은 스펙의 스텁 범위로만 구현 |
 | U2 | 브라우저 자동화의 전환 중간 프레임 측정 | 헤드리스/백그라운드 탭에서 **CSS 트랜지션이 정지**해 `getBoundingClientRect`·`getComputedStyle`이 중간값에서 멈춘다. 전환 검증은 클래스 상태 + `transition-duration/timing-function` 실측으로 대체하고, 스크린샷은 `?rm=1`로 정착시킨 뒤 촬영 |
-| U3 | 랭킹·프로필 본화면 | 스펙 §6에서 스텁(앱바+Empty State)으로 명시된 범위. 그대로 구현 |
-| U4 | 댓글·알림·식당 추가·통합검색 | 스펙 §6 화면 목록 밖. 진입 시 안내 토스트로 처리 |
+| U3 | 내 식당 리스트(S5)·프로필 수정·팔로워/팔로잉 목록 | 피그마 `724:9698`에 존재하나 2차 작업 범위에서 제외. 진입 시 안내 토스트 |
+| U4 | 랭킹 지역·카테고리 선택 시트 | 피그마 `724:8837`에 존재. 필터 칩은 배치했으나 시트는 미구현 |
+| U5 | 댓글 스레드·식당 추가(S18) | 스펙 §6 화면 목록 밖. 진입 시 안내 토스트 |
+
+---
+
+## 4-B. 모션 가이드(`handoff_모션가이드_개발.md`) 대조 결과
+
+가이드와 구현이 어긋난 **10건을 찾아 전부 고쳤다.**
+
+| # | 가이드 명세 | 고치기 전 | 고친 뒤 |
+|---|---|---|---|
+| 1 | Push/Pop 딤 = `d6 · **standard**` (§2) | 딤에 `emphasized-enter` 적용 | `standard`로 교체 |
+| 2 | 엣지 스와이프 임계 초과 시 "남은 거리만 **d4·exit**" (§2) | 정착을 `d5·emphasized-exit`로 처리 | `.anim-settle`(d4·exit) 신설, 타이머도 d4 |
+| 3 | 시트 Dismiss = Peek에서 **30%** 하향 (§4) | 40%(0.6배) 임계 | 30%(0.7배)로 교정 |
+| 4 | 시트 드래그 **scrim 연동 = 1-(이동량/높이)** (§4) | scrim 없음 | `.sheet-scrim` 추가, 진행률 비례 opacity |
+| 5 | 칩 **해제는 d2** (§3) | 선택·해제 모두 d3 | 기본 d2 / `.is-on` d3 |
+| 6 | 토스트 **소멸 d2·exit** (§3) | 소멸 d4 | `.is-out`(d2·exit) 추가 |
+| 7 | 버튼 loading = 라벨 fade-out d2 → 스피너 fade-in d4, 너비 고정 (§3) | 미구현 | `.btn.is-loading` + `.btn__label`/`.btn__load` |
+| 8 | 배너 = 높이 `grid 0fr→1fr` d5·enter + fade delay 80 (§3) | 미구현 | `.banner` 추가 (컴포넌트 데모) |
+| 9 | 인풋 **제출 거부 시에만** 그룹 shake ±6 ×2 (§3) | 미구현 | `rejectField()` + `@keyframes hotam-shake` |
+| 10 | count-up은 **"이전 점수부터"** (§3) | 항상 0부터 | `Modal.prevScore` 도입(재방문 기록이면 기존 점수부터) |
+
+### reduced-motion 재설계 (가이드 §5 — 가장 큰 수정)
+
+기존 구현은 `d1~d8`을 전부 1ms로 눌러 **모든 모션을 없앴다.** 가이드는 그게 아니라
+"**이동·overshoot·count-up·패럴랙스만** 제거하고 페이드·순차·스피너는 유지"를 요구한다.
+
+| 가이드 요구 | 고치기 전 | 고친 뒤 |
+|---|---|---|
+| Trans1·2 이동 → cross-fade **d4** | d4가 1ms라 페이드가 안 보임 | duration 유지, transform만 제거 |
+| Trans3 **순차 페이드 유지** | 즉시 전환 | d2/d4/delay-100 그대로 |
+| 스피너 **유지(1200ms 감속)** | 정지 | `--d-spin: 800ms -> 1200ms` |
+| overshoot 제거 | duration 축소로 우회 | `--overshoot`/`--emphasized-*`를 `standard`로 치환 |
+| 시트·토스트 상승 → 페이드만 | 일부만 | `.toast` `.sheet__seq` `.state__seq` `.reveal__*` `.rec-card--*` transform 제거 |
+| `animation:none` 전역 해킹 금지 | 해당 없음 | 유지 (shake 1곳만 국소 비활성) |
+
+`@media (prefers-reduced-motion: reduce)` 블록도 같은 규칙으로 병행 구현했다.
+
+### 그 밖에 반영한 것
+- **햅틱**(§4): `navigator.vibrate` 기반 light/success/error. 스냅·임계 도달·점수 공개·제출 거부에만, 100ms 내 중복 병합.
+- 일반 버튼 탭·스크롤에는 걸지 않았다(가이드 금지 조항).
+
+---
+
+## 4-C. 피그마 8개 노드 반영 (2차)
+
+정주가 제공한 노드 ID로 접근해 아래 화면을 구현/교체했다.
+
+| 노드 | 영역 | 처리 |
+|---|---|---|
+| `712:9161` | 진입 | 변수 실측 기준 노드 |
+| `712:11830` | 홈/피드 | S7 전면 재구성(1차에서 완료) |
+| `718:4325` | 검색/알림 | **S15 통합검색 · S12 알림 신규 구현** (홈 앱바 아이콘에서 진입) |
+| `724:7829` | 탐색 | S9 시트 행 · S4 상세 정렬(1차에서 완료) |
+| `724:8173` | 기록 | 기록 플로우 4단계(구현 완료) |
+| `724:8837` | 랭킹 | **S11 전면 구현** — 미식/식당 랭킹 세그 · 내 순위 카드(4위·상위 1%) · 친구/전체 · 내 행 하이라이트 · 팔로우 버튼 · 식당 랭킹 필터 칩 |
+| `724:9698` | 프로필 | **S10 전면 구현** — 아바타+3스탯 · 닉네임/핸들/프로필 수정 · 내 식당 리스트 진입 · 기록/위시 탭 · 3열 그리드(이름+점수 오버레이) |
+| `724:11079` | 설정 | **설정 신규 구현** — 계정/알림/이용 안내 3그룹 · 로그아웃·탈퇴 다이얼로그 |
+
+랭킹·프로필은 1차에서 Empty State 스텁이었으나 **본화면으로 교체**했다.
+
+---
+
+## 4-D. 모션 바로가기 바 (신규)
+
+화면 최상단에 **14개 모션을 항목별로 재생하는 버튼 바**를 추가했다. 각 버튼은 해당 모션이
+실제로 일어나는 상태까지 앱을 몰고 간 뒤 재생한다(모달·다이얼로그 정리 → 목표 화면 이동 → 재생).
+
+Trans1 Push/Pop · 엣지 스와이프 Pop · Trans2 모달 · Trans3 탭 페이드 · Trans5 루트 교체 ·
+시트 스냅 3단 · 미리보기 확장 · 점수 공개 · 스켈레톤 200/300 · 찜 실패 역전 · 다이얼로그 ·
+토스트 교체 · 컴포넌트 모션 모음 · 빈 상태 순차 등장
+
+버튼마다 명세(`d6 · emphasized-enter + 딤 ink-12` 등)를 함께 표기해 눈으로 본 것과 문서를 바로 대조할 수 있다.
+엣지 스와이프는 실제 PointerEvent를 발생시켜 **수동 조작과 완전히 같은 경로**로 재생된다.
+14개 전부 자동 클릭 순회로 에러 0 확인.
 
 ---
 
@@ -128,10 +203,13 @@
 | `09_explore_empty.png` | S9 빈 상태(Half 자동 승격) |
 | `10_detail.png` | S4 식당 상세 |
 | `11_record_step1.png` | REC 기록 모달 1단계 |
-| `12_rank.png` | S11 랭킹 스텁 |
-| `13_profile.png` | S12 프로필 스텁 |
-| `14_components.png` | 컴포넌트 데모 |
-| `15_demo_a.png` | 전환 데모 A |
+| `12_rank.png` | S11 랭킹 |
+| `13_profile.png` | S10 프로필 |
+| `14_search.png` | S15 통합검색 |
+| `15_inbox.png` | S12 알림 |
+| `16_settings.png` | 설정 |
+| `17_components.png` | 컴포넌트 데모 |
+| `18_demo_a.png` | 전환 데모 A |
 
 **피그마 원본:** `reference/figma_712-11830.png`(S7 홈) · `figma_724-7829.png`(S9+S4) · `figma_718-4325.png` · `figma_724-8173.png` · `figma_724-8837.png` · `figma_724-9698.png` · `figma_724-11079.png` · `figma_page_712-9161.png` · `figma_home_hi.png`(고해상도)
 **크롭:** `reference/crop_home.png` (홈 피드 프레임 단독)
@@ -166,7 +244,14 @@
 
 ---
 
-## 7. 실행 방법
+## 7. 실행 · 배포
+
+**라이브:** https://jeonju-park.github.io/hotam-motion-prototype/
+**저장소:** https://github.com/Jeonju-Park/hotam-motion-prototype (public · GitHub Pages, main 브랜치 루트)
+
+> 공개 저장소인 이유: 무료 플랜은 **비공개 저장소에 Pages를 붙일 수 없다.** 정주 확인 후 공개로 전환했다.
+> 피그마 원본 보드 캡처(`reference/figma_*.png`, `crop_*.png`, `cover.png`)와 내부 실행 프롬프트는
+> `.gitignore`로 **저장소에서 제외**했다. 배포본에는 프로토타입이 직접 렌더한 스크린샷만 들어간다.
 
 ```bash
 cd 20_work/05_prototype_motion
@@ -174,6 +259,7 @@ npx serve .
 ```
 
 - 진입: `http://localhost:3000/index.html` (또는 `python3 -m http.server 8899`)
+- **모션 바로가기 바**(최상단): 14개 모션을 항목별로 재생. 각 버튼에 명세가 함께 적혀 있다
 - 개발 바: reduced-motion · 4x 슬로우 · 상태 강제(정상/로딩/빈/에러) · 네트워크 지연 슬라이더(0~1500ms) · 컴포넌트 · 전환 데모 · 초기화
 - URL 파라미터: `?state=loading|empty|error` `?delay=0~1500` `?rm=1` `?slow=1` `?bare=1`(개발 바 숨김)
 - 해시 라우트: `#login #onboard1 #onboard2 #home #explore #detail #record #rank #profile #components #demoa`

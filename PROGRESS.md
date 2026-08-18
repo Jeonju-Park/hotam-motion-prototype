@@ -29,6 +29,22 @@
 | 08:25 | STEP 9' | 재검증: verify 12 pass/0 fail · 스크린샷 15장 재캡처 · 전 라우트 13개 순회 · 콘솔 0 | - |
 | 08:35 | STEP 10 | QA_REPORT.md 작성 · 마감 | - |
 
+## 2차 — 모션 가이드 대조 · 피그마 8노드 · 배포
+
+| 시각 | 내용 | 검증 |
+|---|---|---|
+| 09:10 | `handoff_모션가이드_개발.md` v1.0.0 대조 — 어긋난 10건 발견 | QA_REPORT §4-B |
+| 09:20 | 딤 easing(standard) · 엣지 정착(d4·exit) · dismiss 30% · 시트 scrim 연동 · 칩 해제 d2 · 토스트 소멸 d2 교정 | verify 통과 |
+| 09:35 | 미구현 컴포넌트 추가: 버튼 loading · 배너(grid 0fr->1fr) · 제출 거부 shake · 햅틱 | 컴포넌트 데모 |
+| 09:45 | **reduced-motion 재설계** — 전 duration 1ms 압축을 폐기하고 "이동·overshoot·count-up·패럴랙스만 제거" 방식으로 전환. 스피너 1200ms 감속 유지 | 토글 검증 |
+| 09:55 | count-up "이전 점수부터"(`Modal.prevScore`) | 점수 공개 |
+| 10:10 | S11 랭킹 전면 구현(미식/식당 세그·내 순위 카드·친구/전체·내 행 하이라이트) | 피그마 724:8837 |
+| 10:25 | S10 프로필 전면 구현(3스탯·핸들·내 식당 리스트·기록/위시·3열 그리드) | 피그마 724:9698 |
+| 10:35 | S15 통합검색 · S12 알림 · 설정 신규 구현 | 피그마 718:4325 · 724:11079 |
+| 10:50 | **모션 바로가기 바 14종** 추가 — 상태까지 몰고 간 뒤 재생, 엣지 스와이프는 실제 PointerEvent 재생 | 자동 순회 에러 0 |
+| 11:00 | 스크린샷 18장 재캡처 · verify 12 pass / 0 fail | - |
+| 11:10 | GitHub 저장소 생성·푸시 → Pages 배포 | https://jeonju-park.github.io/hotam-motion-prototype/ |
+
 ## 마감
 
 - 산출물: `index.html` `tokens.css` `app.css` `app.js` `data.js` · `verify/{verify,shots,crop}.mjs` · `reference/`(피그마 원본 9 + 크롭 1 + 스크린샷 15 + 메타 2) · `PROGRESS.md` `QA_REPORT.md`

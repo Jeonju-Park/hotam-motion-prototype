@@ -1,0 +1,8 @@
+.DS_Store
+.croptmp/
+# 피그마 원본 보드 캡처는 배포 저장소에 올리지 않는다(미공개 디자인 원본)
+reference/figma_*.png
+reference/crop_*.png
+reference/cover.png
+# 내부 실행 프롬프트
+PROTO_PROMPT.md

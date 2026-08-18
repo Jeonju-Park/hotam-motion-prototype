@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ko" data-rm="0" data-slow="0">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>호탐 — 모션 프로토타입</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<!-- ===================== 개발 바 ===================== -->
+<header class="devbar" id="devbar">
+  <div class="devbar__brand">호탐 <span>모션 프로토타입</span></div>
+
+  <div class="devbar__group">
+    <button type="button" class="devbtn" id="devRm" data-on="0">reduced-motion</button>
+    <button type="button" class="devbtn" id="devSlow" data-on="0">4x 슬로우</button>
+  </div>
+
+  <div class="devbar__group" role="group" aria-label="상태 강제">
+    <span class="devbar__label">상태</span>
+    <button type="button" class="devbtn" data-state="normal" data-on="1">정상</button>
+    <button type="button" class="devbtn" data-state="loading" data-on="0">로딩</button>
+    <button type="button" class="devbtn" data-state="empty" data-on="0">빈</button>
+    <button type="button" class="devbtn" data-state="error" data-on="0">에러</button>
+  </div>
+
+  <div class="devbar__group">
+    <label class="devbar__label" for="devDelay">지연</label>
+    <input type="range" id="devDelay" min="0" max="1500" step="50" value="600">
+    <output class="devbar__out" id="devDelayOut">600ms</output>
+  </div>
+
+  <div class="devbar__group">
+    <button type="button" class="devbtn" id="devComponents">컴포넌트</button>
+    <button type="button" class="devbtn" id="devTrans">전환 데모</button>
+    <button type="button" class="devbtn" id="devReset">초기화</button>
+  </div>
+</header>
+
+<!-- ============ 모션 바로가기 (참고용) ============ -->
+<nav class="motionbar" id="motionbar" aria-label="모션 바로가기">
+  <span class="motionbar__t">모션 바로가기</span>
+  <div class="motionbar__list" id="motionList"></div>
+  <p class="motionbar__hint" id="motionHint">버튼을 누르면 해당 모션이 재생됩니다. 느리게 보려면 위의 <b>4x 슬로우</b>를 켜세요.</p>
+</nav>
+
+<!-- ===================== 프레임 ===================== -->
+<main class="stage">
+  <div class="frame" id="frame">
+
+    <!-- 상태바 -->
+    <div class="statusbar" id="statusbar">
+      <span class="statusbar__time">9:41</span>
+      <span class="statusbar__icons" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 17v-2M8 17v-5M13 17v-8M18 17V6"/></svg>
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 8.5a15 15 0 0 1 20 0M5 12a10 10 0 0 1 14 0M8.5 15.5a5 5 0 0 1 7 0"/><circle cx="12" cy="19" r="1"/></svg>
+        <svg viewBox="0 0 24 24" width="20" height="16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="7" width="17" height="10" rx="3"/><rect x="4" y="9" width="11" height="6" rx="1.5" fill="currentColor" stroke="none"/><path d="M21 11v2" stroke-linecap="round"/></svg>
+      </span>
+    </div>
+
+    <!-- 화면 스택 -->
+    <div class="viewport" id="viewport">
+      <section class="scr" id="login"      data-title="로그인"      data-chrome="none"></section>
+      <section class="scr" id="onboard1"   data-title="온보딩 선택"  data-chrome="none"></section>
+      <section class="scr" id="onboard2"   data-title="온보딩 평가"  data-chrome="none"></section>
+      <section class="scr" id="home"       data-title="홈"          data-chrome="tab"  data-tab="home"></section>
+      <section class="scr" id="explore"    data-title="탐색"        data-chrome="tab"  data-tab="explore"></section>
+      <section class="scr" id="rank"       data-title="랭킹"        data-chrome="tab"  data-tab="rank"></section>
+      <section class="scr" id="profile"    data-title="프로필"      data-chrome="tab"  data-tab="profile"></section>
+      <section class="scr" id="detail"     data-title="식당 상세"    data-chrome="none"></section>
+      <section class="scr" id="settings"   data-title="설정"        data-chrome="none"></section>
+      <section class="scr" id="search"     data-title="검색"        data-chrome="none"></section>
+      <section class="scr" id="inbox"      data-title="알림"        data-chrome="none"></section>
+      <section class="scr" id="components" data-title="컴포넌트"     data-chrome="none"></section>
+      <section class="scr" id="demoa"      data-title="Demo A"      data-chrome="none"></section>
+      <section class="scr" id="demob"      data-title="Demo B"      data-chrome="none"></section>
+      <section class="scr" id="democ"      data-title="Demo C"      data-chrome="none"></section>
+    </div>
+
+    <!-- 탭바 -->
+    <nav class="tabbar" id="tabbar" aria-label="주요 메뉴"></nav>
+
+    <!-- 오버레이 레이어 -->
+    <div class="edgehint" id="edgehint" aria-hidden="true"></div>
+    <div class="modal-scrim" id="modalScrim" aria-hidden="true"></div>
+    <section class="scr scr--modal" id="record" data-title="기록" data-chrome="modal"></section>
+    <div class="dialog-layer" id="dialogLayer"></div>
+    <div class="toast-layer" id="toastLayer" aria-live="polite"></div>
+  </div>
+</main>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

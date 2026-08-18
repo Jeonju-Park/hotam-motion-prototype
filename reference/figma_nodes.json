@@ -1,0 +1,28 @@
+{
+  "fileKey": "BXMdfHOhPcmpD5W874jeOS",
+  "fileName": "호탐 UI2",
+  "collectedAt": "2026-08-19",
+  "accessStatus": "PARTIAL_OK — 페이지 목록(get_metadata, nodeId 없음)은 'Cover'만 반환하지만, 노드 ID를 명시하면 디자인 노드에 정상 접근된다. 정주가 제공한 8개 노드 전부 스크린샷·변수 수집 성공.",
+  "howToAccess": "get_metadata를 nodeId 없이 부르면 열린 페이지(Cover)만 보인다. 반드시 Figma URL의 node-id를 nodeId로 넘길 것. 대형 노드는 get_metadata 파싱이 실패하므로 get_screenshot으로 대체한다.",
+  "pages": [{ "id": "0:1", "name": "Cover", "reachable": true }],
+  "nodes": [
+    { "id": "1:2",      "name": "File Cover",  "w": 1920, "h": 1080, "file": "cover.png" },
+    { "id": "712:9161", "name": "(디자인 페이지 대영역)", "w": 9874, "h": 8285, "file": "figma_page_712-9161.png",
+      "note": "변수 수집 기준 노드. get_metadata는 크기 초과로 파싱 실패" },
+    { "id": "712:11830", "name": "S7 홈 피드 세트", "w": 2774, "h": 5005,
+      "file": "figma_712-11830.png", "hiRes": "figma_home_hi.png", "crop": "crop_home.png",
+      "note": "추천/팔로잉 · 로딩 · 빈 · 에러 · 댓글 · 화면개요표" },
+    { "id": "724:7829", "name": "S9 탐색 + S4 상세 세트", "w": 3226, "h": 2498, "file": "figma_724-7829.png",
+      "note": "지도·시트 3단·미리보기·재검색 pill · 상세(3열 평점·찜/공유·친구들의 기록) · 모션 스펙표(Peek 200/Half 50vh/Full 95vh, 속도 0.5px/ms, Full fade-out 100ms)" },
+    { "id": "718:4325",  "name": "(세트)", "w": 3226, "h": 6631, "file": "figma_718-4325.png" },
+    { "id": "724:8173",  "name": "(세트)", "w": 2740, "h": 4138, "file": "figma_724-8173.png" },
+    { "id": "724:8837",  "name": "(세트)", "w": 2334, "h": 2078, "file": "figma_724-8837.png" },
+    { "id": "724:9698",  "name": "(세트)", "w": 2334, "h": 5225, "file": "figma_724-9698.png" },
+    { "id": "724:11079", "name": "(세트)", "w": 1882, "h": 3497, "file": "figma_724-11079.png" }
+  ],
+  "notReached": "위 8개 노드 외 화면(S11 랭킹 · S10 프로필 본화면 · S12 알림 · S15 통합검색 · S18 식당 추가)은 노드 ID가 제공되지 않아 대조하지 못했다. 해당 화면은 PROTO_SPEC §6의 스텁 범위로만 구현.",
+  "blockedPaths": [
+    "get_metadata(nodeId 없음) -> 'Cover' 1개만 노출 (데스크톱에 열린 페이지 기준)",
+    "claude-in-chrome으로 figma.com 접속 -> 로그인 벽. 자격증명 입력은 수행하지 않음"
+  ]
+}

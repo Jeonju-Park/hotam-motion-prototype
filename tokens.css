@@ -1,0 +1,220 @@
+/* ============================================================
+   호탐 모션 프로토타입 — tokens.css
+   v1.0 · 2026-08-19
+   출처: PROTO_SPEC.md §2 + 00_context/tokens/*.json(Figma Variables export 2026-07)
+        + 03_design/design_component_input_button.md v0.4
+   규칙: 이 파일 외의 어떤 파일에도 hex/rgba/시간/easing 하드코딩 금지.
+   ============================================================ */
+
+:root {
+  /* ---------- 컬러 · bg (get_variable_defs 실측 2026-08-19: 화면=white, 면=gray) ---------- */
+  --bg-default: #FFFFFF;
+  --bg-surface: #F0F4F5;
+  --bg-disabled: #E3E8EA;
+
+  /* ---------- 컬러 · text ---------- */
+  --text-primary: #0E0E0E;
+  --text-secondary: #535C60;
+  --text-tertiary: #6C767B;
+  --text-disabled: #8A959A;
+  --text-brand: #A94F00;
+  --text-on-button: #FFFFFF;
+
+  /* ---------- 컬러 · border ---------- */
+  --border-default: #E3E8EA;
+  --border-focus: #FE7902;
+  --border-filled: #0E0E0E;
+
+  /* ---------- 컬러 · main ---------- */
+  --main-primary: #FE7902;
+  --main-primary-pressed: #D66500;
+  --main-primary-bg: #FFF4EA;
+  --main-secondary: #26422A;
+  --main-secondary-pressed: #14231A;
+  --main-secondary-bg: #E4EDE5;
+  --main-tertiary: #42302D;
+  --main-tertiary-pressed: #241816;
+  --main-tertiary-bg: #EDE5E2;
+
+  /* ---------- 컬러 · status ---------- */
+  --status-success: #1FA75C;
+  --status-success-bg: #E1F5E8;
+  --status-danger: #E5484D;
+  --status-danger-bg: #FDE8E7;
+  --status-info: #2E7DE0;
+  --status-info-bg: #E4F0FD;
+
+  /* ---------- 컬러 · grade (PROTO_SPEC 08-11 캐논: 별로=red) ---------- */
+  --grade-good: #FE7902;
+  --grade-good-bg: #FFE5CF;
+  --grade-soso: #35704F;
+  --grade-soso-bg: #E4EDE5;
+  --grade-bad: #E5484D;
+  --grade-bad-bg: #FDE8E7;
+
+  /* ---------- 컬러 · alpha / overlay ---------- */
+  --overlay-scrim: rgba(14, 14, 14, .6);
+  --alpha-ink-8: rgba(14, 14, 14, .08);
+  --alpha-ink-12: rgba(14, 14, 14, .12);
+  --alpha-ink-85: rgba(14, 14, 14, .85);
+  --alpha-glass-60: rgba(255, 255, 255, .6);
+  --gray-100: #F1F1F1;
+  --gray-200: #E7E7E7;
+  --gray-400: #B3B3B3;
+  --alpha-white-70: rgba(255, 255, 255, .7);
+  --alpha-white-0: rgba(255, 255, 255, 0);
+  --alpha-ink-0: rgba(14, 14, 14, 0);
+
+  /* ---------- 그림자 ---------- */
+  --shadow-sm: 0 1px 2px var(--alpha-ink-8);
+  --shadow-md: 0 2px 8px var(--alpha-ink-8);
+  --shadow-lg: 0 -2px 16px var(--alpha-ink-12);
+  --shadow-fab: 0 4px 12px var(--alpha-ink-12);
+
+  /* ---------- 간격 ---------- */
+  --sp-xxs: 4px;
+  --sp-xs: 8px;
+  --sp-sm: 12px;
+  --sp-md: 16px;
+  --sp-page: 20px;
+  --sp-lg: 24px;
+  --sp-xl: 32px;
+  --sp-xxl: 48px;
+
+  /* ---------- radius (12 초과·pill 금지) ---------- */
+  --r-none: 0px;
+  --r-sm: 4px;
+  --r-md: 8px;
+  --r-lg: 12px;
+  --r-full: 9999px;   /* 피그마 radius/full — 점수 배지·아바타 등 배지류 한정 */
+  --r-ctrl-lg: 12px;
+  --r-ctrl-sm: 10px;
+
+  /* ---------- 컨트롤 높이 ---------- */
+  --h-ctrl-lg: 60px;
+  --h-ctrl-md: 52px;
+  --h-ctrl-sm: 40px;
+
+  /* ---------- 아이콘 · 보더 · 투명도 ---------- */
+  --icon-sm: 20px;
+  --icon-md: 24px;
+  --icon-lg: 32px;
+  --bw-thin: 1px;
+  --bw-thick: 2px;
+  --op-disabled: .4;
+  --op-scrim: .6;
+
+  /* ---------- 타이포 (Figma Text Styles v1.0.0) ---------- */
+  --font-family: "Pretendard", "Pretendard Variable", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --fs-display: 24px;   --fw-display: 800;  --lh-display: 1.3;
+  --fs-heading-lg: 20px; --fw-heading-lg: 700; --lh-heading-lg: 1.3;
+  --fs-heading-sm: 18px; --lh-heading-sm: 1.3;
+  --fs-lg: 16px;        --lh-lg: 1.5;
+  --fs-sm: 14px;        --lh-sm: 1.5;
+  --fs-caption: 12px;   --lh-caption: 1.4;
+  --fs-micro: 11px;     --lh-micro: 1.3;
+  --fw-regular: 400;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+  --ls-display: -.01em;
+
+  /* ---------- 모션 · duration (피그마 구현 가능 8종) ---------- */
+  --d1: 50ms;
+  --d2: 100ms;
+  --d3: 150ms;
+  --d4: 200ms;
+  --d5: 250ms;
+  --d6: 300ms;
+  --d7: 400ms;
+  --d8: 600ms;
+
+  /* ---------- 모션 · easing (7종) ---------- */
+  --linear: cubic-bezier(0, 0, 1, 1);
+  --standard: cubic-bezier(.35, 0, .35, 1);
+  --enter: cubic-bezier(0, 0, .15, 1);
+  --exit: cubic-bezier(.35, 0, 1, 1);
+  --emphasized-enter: cubic-bezier(.03, .4, .1, 1);
+  --emphasized-exit: cubic-bezier(.35, 0, .95, .55);
+  --overshoot: cubic-bezier(.34, 1.29, .35, .98);
+
+  /* ---------- 모션 · delay (스펙 §3·§4 명시 지연값. duration 별칭 아님) ---------- */
+  --dl-60: 60ms;
+  --dl-80: 80ms;
+  --dl-100: 100ms;
+  --dl-120: 120ms;
+  --dl-160: 160ms;
+  --dl-200: 200ms;
+
+  /* ---------- 모션 · 루프 전용 (스펙 §4 명시값 — d1~d8 범위 밖) ---------- */
+  --d-pulse: 1200ms;
+  --d-spin: 800ms;
+
+  /* ---------- 프레임 · 레이아웃 상수 ---------- */
+  --frame-w: 390px;
+  --frame-h: 844px;
+  --appbar-h: 56px;
+  --tabbar-h: 64px;
+  --touch-min: 44px;
+  --push-offset: -25%;
+  --modal-bg-scale: .94;
+
+  /* ---------- 시트 스냅 ---------- */
+  --sheet-peek: 200px;
+  --sheet-grabber-w: 32px;
+  --sheet-grabber-h: 4px;
+  --sheet-grabber-zone: 40px;
+
+  /* ---------- z-index ---------- */
+  --z-map: 1;
+  --z-content: 10;
+  --z-sheet: 30;
+  --z-tabbar: 40;
+  --z-appbar: 45;
+  --z-scrim: 50;
+  --z-modal: 60;
+  --z-dialog: 70;
+  --z-toast: 80;
+  --z-devbar: 90;
+}
+
+/* reduced-motion (핸드오프 가이드 §5)
+   제거 대상은 "이동·overshoot·count-up·패럴랙스"이지 시간 자체가 아니다.
+   - Trans1·2 이동 -> cross-fade d4  (transform 제거는 app.css 규칙에서)
+   - Trans3 순차 페이드 유지        -> d2/d4/dl-100 그대로 둔다
+   - 스피너 유지(감속)              -> 800ms -> 1200ms
+   - overshoot/emphasized -> standard 로 치환
+   (html[data-rm="1"] 특이도 0,1,1 > :root 0,1,0) */
+html[data-rm="1"] {
+  --overshoot: cubic-bezier(.35, 0, .35, 1);
+  --emphasized-enter: cubic-bezier(.35, 0, .35, 1);
+  --emphasized-exit: cubic-bezier(.35, 0, .35, 1);
+  --d-spin: 1200ms;
+}
+
+/* 개발 바 4× 슬로우 — 모든 시간 토큰을 4배로 */
+html[data-slow="1"] {
+  --d1: 200ms; --d2: 400ms; --d3: 600ms; --d4: 800ms;
+  --d5: 1000ms; --d6: 1200ms; --d7: 1600ms; --d8: 2400ms;
+  --dl-60: 240ms; --dl-80: 320ms; --dl-100: 400ms;
+  --dl-120: 480ms; --dl-160: 640ms; --dl-200: 800ms;
+  --d-pulse: 4800ms; --d-spin: 3200ms;
+}
+
+/* 슬로우 + reduced-motion 동시 = 슬로우 시간 위에 rm 곡선 치환 */
+html[data-slow="1"][data-rm="1"] {
+  --overshoot: cubic-bezier(.35, 0, .35, 1);
+  --emphasized-enter: cubic-bezier(.35, 0, .35, 1);
+  --emphasized-exit: cubic-bezier(.35, 0, .35, 1);
+  --d-spin: 4800ms;
+}
+
+/* OS 설정 병행 지원 — JS가 data-rm 을 세팅하지 못한 경우의 안전망.
+   가이드 §5의 opt-in 원칙에 따라 "이동"만 걷어낸다. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --overshoot: cubic-bezier(.35, 0, .35, 1);
+    --emphasized-enter: cubic-bezier(.35, 0, .35, 1);
+    --emphasized-exit: cubic-bezier(.35, 0, .35, 1);
+    --d-spin: 1200ms;
+  }
+}

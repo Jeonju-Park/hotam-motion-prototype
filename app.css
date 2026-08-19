@@ -98,14 +98,14 @@ body.is-bare .frame { border-radius: var(--r-none); box-shadow: none; }
 }
 .input, .card__text { user-select: text; }
 .statusbar {
-  position: absolute; inset: 0 0 auto 0; height: var(--sp-xxl); z-index: var(--z-appbar);
+  position: absolute; inset: 0 0 auto 0; height: var(--sp-xxl); z-index: var(--z-status);
   display: flex; align-items: center; justify-content: space-between;
   padding: 0 var(--sp-page) 0 var(--sp-lg);
   color: var(--text-primary); pointer-events: none;
   font-size: var(--fs-caption); font-weight: var(--fw-semibold);
 }
 .statusbar__icons { display: flex; align-items: center; gap: var(--sp-xxs); }
-.frame.is-modalbg .statusbar { color: var(--bg-surface); transition: color var(--d7) var(--enter); }
+.frame.is-modalbg .statusbar { color: var(--text-on-button); transition: color var(--d4) var(--enter); }
 
 /* ---------------- 4. 화면 스택 · 전환 ---------------- */
 .viewport {
@@ -132,6 +132,7 @@ body.is-bare .frame { border-radius: var(--r-none); box-shadow: none; }
   will-change: transform, opacity;
 }
 .scr.is-active { display: flex; }
+.scr.z-top { z-index: var(--z-content); }
 .scr__dim {
   position: absolute; inset: 0; z-index: var(--z-scrim);
   background: var(--alpha-ink-12); opacity: 0; pointer-events: none;
@@ -321,7 +322,7 @@ html[data-rm="1"] .field.is-rejected { animation: none; }
   flex: none; padding: var(--sp-sm) var(--sp-page) var(--sp-page);
   background: var(--bg-default); border-top: var(--bw-thin) solid var(--border-default);
 }
-.cta-dock--float { border-top: 0; background: var(--alpha-white-70); backdrop-filter: blur(12px); }
+.cta-dock--float { border-top: 0; background: var(--alpha-white-70); }
 
 /* ---------------- 8. 인풋 ---------------- */
 .field { display: block; margin-bottom: var(--sp-md); }
@@ -511,6 +512,17 @@ html[data-rm="1"] .field.is-rejected { animation: none; }
 .sk--avatar { width: var(--sp-xxl); height: var(--sp-xxl); border-radius: 50%; }
 .sk-card { padding: var(--sp-md); display: grid; gap: var(--sp-xs); }
 .sk-row { display: flex; gap: var(--sp-sm); align-items: center; }
+.sk-feed { padding: var(--sp-md) var(--sp-page) var(--sp-xs); }
+.sk-feed--row { padding: var(--sp-sm) var(--sp-page); }
+.sk-feed + .sk-feed { border-top: var(--bw-thin) solid var(--bg-surface); }
+.sk--thin { height: var(--sp-xs); }
+.sk--pill { width: var(--sp-xxl); height: var(--icon-lg); border-radius: var(--r-full); }
+.sk-strip { display: flex; gap: var(--sp-xs); margin: var(--sp-sm) 0; overflow: hidden; }
+.sk--shot { width: 240px; height: 200px; flex: none; border-radius: var(--r-lg); }
+.sk--bar { display: block; height: var(--touch-min); border-radius: var(--r-lg); margin-bottom: var(--sp-sm); }
+.sk--dot { width: var(--icon-md); height: var(--icon-md); border-radius: 50%; }
+.sk--thumb64 { width: 64px; height: 64px; flex: none; border-radius: var(--r-md); }
+.sk--line { display: block; }
 .spinner {
   width: var(--icon-md); height: var(--icon-md); color: var(--main-primary);
   animation: hotam-spin var(--d-spin) var(--linear) infinite;
@@ -836,7 +848,7 @@ html[data-rm="1"] .field.is-rejected { animation: none; }
 }
 .detail-appbar__title { flex: 1; font-size: var(--fs-lg); font-weight: var(--fw-semibold); opacity: 0; }
 .detail-appbar > * { position: relative; }
-.icon-btn--float { background: var(--alpha-white-70); backdrop-filter: blur(8px); }
+.icon-btn--float { background: var(--alpha-white-70); }
 .detail-addr {
   display: flex; align-items: center; gap: var(--sp-xxs); margin-top: var(--sp-xs);
   color: var(--text-secondary); font-size: var(--fs-caption); line-height: var(--lh-caption);
@@ -867,7 +879,7 @@ html[data-rm="1"] .field.is-rejected { animation: none; }
 
 /* ---------------- 23. 기록 플로우 ---------------- */
 .scr--modal {
-  top: var(--sp-xxl); z-index: var(--z-modal);
+  z-index: var(--z-modal);
   background: var(--bg-default); border-radius: var(--r-lg) var(--r-lg) 0 0;
   box-shadow: var(--shadow-lg);
 }
@@ -928,8 +940,8 @@ html[data-rm="1"] .field.is-rejected { animation: none; }
 .seg-lg.is-on { color: var(--text-primary); }
 .segs--sub { gap: var(--sp-md); border-bottom: var(--bw-thin) solid var(--border-default); }
 .segs--sub .seg { font-size: var(--fs-sm); }
-.body.is-fadeout, #profPane.is-fadeout, #rankList.is-fadeout { opacity: 0; transition: opacity var(--d2) var(--exit); }
-.body, #profPane, #rankList { transition: opacity var(--d4) var(--enter); }
+#rankBody.is-fadeout, #searchBody.is-fadeout, #profPane.is-fadeout, #rankList.is-fadeout { opacity: 0; transition: opacity var(--d2) var(--exit); }
+#rankBody, #searchBody, #profPane, #rankList { transition: opacity var(--d4) var(--enter); }
 
 .mycard {
   display: flex; align-items: center; gap: var(--sp-sm);
@@ -969,7 +981,7 @@ html[data-rm="1"] .field.is-rejected { animation: none; }
   position: absolute; left: 0; right: 0; bottom: 0;
   display: flex; align-items: center; gap: var(--sp-xxs);
   padding: var(--sp-xxs) var(--sp-xs);
-  background: var(--alpha-white-70); backdrop-filter: blur(6px);
+  background: var(--alpha-white-70);
 }
 .pcell__name {
   flex: 1; min-width: 0; font-size: var(--fs-micro); font-weight: var(--fw-semibold);

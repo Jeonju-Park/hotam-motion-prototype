@@ -172,7 +172,7 @@
 
   function show(el) { el.classList.add('is-active'); }
   function hide(el) {
-    el.classList.remove('is-active', 'at-left', 'at-right', 'at-down', 'has-dim', 'is-fadeout', 'is-fadein');
+    el.classList.remove('is-active', 'at-left', 'at-right', 'at-down', 'has-dim', 'is-fadeout', 'is-fadein', 'z-top');
     el.style.transform = '';
     el.style.opacity = '';
     var d = q('.scr__dim', el);
@@ -185,20 +185,25 @@
   function transPush(from, to, done) {
     ensureDim(from);
     show(to);
-    to.classList.add('at-right');
+    /* DOM 순서와 무관하게 들어오는 화면이 항상 위 (검색->상세 등 역순 쌍 대응) */
+    to.classList.add('z-top', 'at-right');
     reflow(to);
     to.classList.add('anim-push');
     from.classList.add('anim-push');
     to.classList.remove('at-right');
     from.classList.add('at-left', 'has-dim');
     after(T.d6, function () {
-      clearAnim(to); clearAnim(from); hide(from); done && done();
+      clearAnim(to); clearAnim(from);
+      to.classList.remove('z-top');
+      hide(from); done && done();
     });
   }
 
   function transPop(from, to, done) {
     ensureDim(to);
     show(to);
+    /* 나가는 화면이 항상 위 */
+    from.classList.add('z-top');
     to.classList.add('at-left', 'has-dim');
     reflow(to);
     to.classList.add('anim-pop');
@@ -206,7 +211,9 @@
     to.classList.remove('at-left', 'has-dim');
     from.classList.add('at-right');
     after(T.d5, function () {
-      clearAnim(to); clearAnim(from); hide(from); done && done();
+      clearAnim(to); clearAnim(from);
+      from.classList.remove('z-top');
+      hide(from); done && done();
     });
   }
 
@@ -348,6 +355,7 @@
     var toEl = scr(App.stack[App.stack.length - 2].route);
     ensureDim(toEl);
     show(toEl);
+    fromEl.classList.add('z-top');
     toEl.classList.add('is-dragging', 'has-dim');
     fromEl.classList.add('is-dragging');
     toEl.style.transform = 'translateX(' + (-0.25 * r.width) + 'px)';
@@ -401,6 +409,7 @@
       after(T.d5, function () {
         clearAnim(s.fromEl); clearAnim(s.toEl);
         s.fromEl.style.transform = '';
+        s.fromEl.classList.remove('z-top');
         hide(s.toEl);
       });
     }
@@ -516,12 +525,25 @@
     });
   }
 
-  /* 스켈레톤은 실제 카드와 같은 실루엣(흰 면 + r-lg + page 여백)을 갖는다 */
+  /* 스켈레톤 = 실제 피드 실루엣(아바타/닉·점수링 -> 사진 스트립 -> 장소 바 -> 본문 -> 액션) */
   function skeletonFeed() {
-    var one = '<div class="card"><div class="sk-card">' +
-      '<div class="sk-row"><div class="sk sk--avatar"></div><div style="flex:1"><div class="sk sk--title"></div></div></div>' +
-      '<div class="sk sk--thumb"></div><div class="sk sk--line"></div><div class="sk sk--line" style="width:70%"></div></div></div>';
-    return one + one + one;
+    var one = '<div class="sk-feed">' +
+      '<div class="sk-row"><span class="sk sk--avatar"></span>' +
+      '<span style="flex:1"><span class="sk sk--line" style="width:40%"></span><span class="sk sk--line sk--thin" style="width:24%;margin-top:var(--sp-xxs)"></span></span>' +
+      '<span class="sk sk--pill"></span></div>' +
+      '<div class="sk-strip"><span class="sk sk--shot"></span><span class="sk sk--shot"></span></div>' +
+      '<span class="sk sk--bar"></span>' +
+      '<span class="sk sk--line" style="width:82%"></span>' +
+      '<div class="sk-row" style="margin-top:var(--sp-xs)"><span class="sk sk--dot"></span><span class="sk sk--dot"></span></div>' +
+      '</div>';
+    return one + one;
+  }
+  /* 리스트(탐색 시트·검색) 스켈레톤 = 썸네일 64 + 2줄 */
+  function skeletonRows() {
+    var one = '<div class="sk-feed sk-feed--row">' +
+      '<div class="sk-row"><span class="sk sk--thumb64"></span>' +
+      '<span style="flex:1"><span class="sk sk--line" style="width:56%"></span><span class="sk sk--line sk--thin" style="width:78%;margin-top:var(--sp-xs)"></span></span></div></div>';
+    return one + one + one + one;
   }
 
   /* ==========================================================
@@ -543,7 +565,8 @@
     this.snaps = [
       SNAP_PEEK_PX,
       Math.round(this.h * SNAP_HALF_VH),
-      Math.min(this.avail, Math.round(this.h * SNAP_FULL_VH))
+      /* Full 95vh: 시트 상단이 화면 5% 지점 — 100%처럼 꽉 차지 않게 */
+      Math.round(this.h * SNAP_FULL_VH) - this.bottomOffset
     ];
     this.index = 0;
     this.y = this.snaps[0];
@@ -1210,7 +1233,7 @@
 
       function load() {
         sheetList.innerHTML = '';
-        deferredSkeleton(sheetList, skeletonFeed(), loadDelay(), paintList);
+        deferredSkeleton(sheetList, skeletonRows(), loadDelay(), paintList);
       }
       load();
       el._reload = load;
@@ -1512,7 +1535,6 @@
       lock();
       tabbarDown();
       viewport.classList.add('is-behind');
-      frame.classList.add('is-modalbg');
       recordEl.classList.add('is-active', 'at-down');
       reflow(recordEl);
       recordEl.classList.add('anim-modal-in');
@@ -1551,7 +1573,7 @@
 
     render: function () {
       recordEl.innerHTML =
-        '<div class="appbar" style="margin-top:var(--sp-md)">' +
+        '<div class="appbar">' +
         '<button type="button" class="icon-btn" data-act="close">' + icon('close') + '</button>' +
         '<span class="appbar__title" id="recTitle">방문 기록</span></div>' +
         '<div class="stepbar"><div class="stepbar__fill" id="recFill" style="width:25%"></div></div>' +
@@ -1707,6 +1729,7 @@
         '<button type="button" class="btn btn--lg btn--text btn--full" data-act="again">계속 기록하기</button>';
 
       wrap.classList.add('is-mounted');
+      frame.classList.add('is-modalbg');   /* 점수 공개 딤 위에서 상태바 흰색 */
       var skipped = false;
       var timers = [];
 
@@ -1742,6 +1765,7 @@
       delegate(cta, 'click', '[data-act="again"]', function () {
         Modal.commit();
         Modal.step = 0; Modal.picked = null; Modal.grade = null; Modal.compareIndex = 0;
+        frame.classList.remove('is-modalbg');
         wrap.classList.remove('is-mounted', 'is-dim', 'is-badge', 'is-chip', 'is-cta');
         Modal.render();
       });
@@ -2096,7 +2120,7 @@
         var v = input.value.trim();
         if (!v) { pre(); return; }
         body.innerHTML = '';
-        deferredSkeleton(body, skeletonFeed(), loadDelay(), function () { results(v); });
+        deferredSkeleton(body, skeletonRows(), loadDelay(), function () { results(v); });
       });
       delegate(el, 'click', '[data-kw]', function (e, t) {
         input.value = t.dataset.kw;

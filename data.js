@@ -16,70 +16,70 @@
   /* 카테고리 키는 app.js의 아이콘 세트와 1:1 대응 */
   var restaurants = [
     {
-      id: 'R01', name: '연남동 손칼국수', category: 'noodle', categoryLabel: '칼국수',
+      id: 'R01', img: 'assets/food/f1.jpg', name: '연남동 손칼국수', category: 'noodle', categoryLabel: '칼국수',
       area: '연남동', address: '서울 마포구 성미산로 29길 12', dist: 240,
       records: 1284, friendScore: 8.9, allScore: 8.2, grade: 'good',
       pin: { x: 118, y: 232 }, tone: 1,
       desc: '멸치 육수에 들깨를 아끼지 않는 집. 웨이팅 20분.'
     },
     {
-      id: 'R02', name: '합정 화로상회', category: 'meat', categoryLabel: '고기',
+      id: 'R02', img: 'assets/food/f2.jpg', name: '합정 화로상회', category: 'meat', categoryLabel: '고기',
       area: '합정동', address: '서울 마포구 양화로 6길 44', dist: 610,
       records: 932, friendScore: 9.5, allScore: 8.8, grade: 'good',
       pin: { x: 236, y: 168 }, tone: 2,
       desc: '숯불 향이 진하게 붙는 두툼한 목살. 예약 필수.'
     },
     {
-      id: 'R03', name: '망원 삼거리 포차', category: 'drink', categoryLabel: '술집',
+      id: 'R03', img: 'assets/food/f3.jpg', name: '망원 삼거리 포차', category: 'drink', categoryLabel: '술집',
       area: '망원동', address: '서울 마포구 포은로 8길 21', dist: 880,
       records: 471, friendScore: 6.2, allScore: 6.6, grade: 'soso',
       pin: { x: 72, y: 402 }, tone: 3,
       desc: '안주보다 분위기. 늦게까지 하는 게 최대 장점.'
     },
     {
-      id: 'R04', name: '서교동 라멘연구소', category: 'noodle', categoryLabel: '라멘',
+      id: 'R04', img: 'assets/food/f4.jpg', name: '서교동 라멘연구소', category: 'noodle', categoryLabel: '라멘',
       area: '서교동', address: '서울 마포구 잔다리로 6길 9', dist: 430,
       records: 2140, friendScore: 9.1, allScore: 9.0, grade: 'good',
       pin: { x: 292, y: 320 }, tone: 4,
       desc: '돈코츠 진하기 3단계 선택. 차슈 추가는 늘 옳다.'
     },
     {
-      id: 'R05', name: '동교동 소금빵집', category: 'bakery', categoryLabel: '베이커리',
+      id: 'R05', img: 'assets/food/f5.jpg', name: '동교동 소금빵집', category: 'bakery', categoryLabel: '베이커리',
       area: '동교동', address: '서울 마포구 동교로 27길 3', dist: 150,
       records: 3021, friendScore: 8.4, allScore: 8.6, grade: 'good',
       pin: { x: 176, y: 118 }, tone: 5,
       desc: '오후 2시 전에 가야 소금빵이 남아 있다.'
     },
     {
-      id: 'R06', name: '상수 카페 목요일', category: 'cafe', categoryLabel: '카페',
+      id: 'R06', img: 'assets/food/f6.jpg', name: '상수 카페 목요일', category: 'cafe', categoryLabel: '카페',
       area: '상수동', address: '서울 마포구 와우산로 15길 30', dist: 720,
       records: 654, friendScore: 5.5, allScore: 6.1, grade: 'soso',
       pin: { x: 320, y: 468 }, tone: 6,
       desc: '커피는 무난, 자리는 넓다. 노트북 작업용.'
     },
     {
-      id: 'R07', name: '홍대 마라공방', category: 'chinese', categoryLabel: '중식',
+      id: 'R07', img: 'assets/food/f7.jpg', name: '홍대 마라공방', category: 'chinese', categoryLabel: '중식',
       area: '서교동', address: '서울 마포구 홍익로 5길 18', dist: 540,
       records: 1103, friendScore: 7.8, allScore: 7.2, grade: 'good',
       pin: { x: 210, y: 396 }, tone: 7,
       desc: '마라 단계는 2단계부터가 진짜. 유부는 필수.'
     },
     {
-      id: 'R08', name: '연희동 백반정식', category: 'korean', categoryLabel: '한식',
+      id: 'R08', img: 'assets/food/f8.jpg', name: '연희동 백반정식', category: 'korean', categoryLabel: '한식',
       area: '연희동', address: '서울 서대문구 연희로 11가길 22', dist: 1320,
       records: 388, friendScore: 7.1, allScore: 7.5, grade: 'soso',
       pin: { x: 96, y: 520 }, tone: 8,
       desc: '반찬이 매일 바뀐다. 계란찜은 상시.'
     },
     {
-      id: 'R09', name: '망원 시장 닭강정', category: 'snack', categoryLabel: '분식',
+      id: 'R09', img: 'assets/food/f9.jpg', name: '망원 시장 닭강정', category: 'snack', categoryLabel: '분식',
       area: '망원동', address: '서울 마포구 망원로 8길 14', dist: 960,
       records: 812, friendScore: 1.2, allScore: 3.4, grade: 'bad',
       pin: { x: 258, y: 556 }, tone: 9,
       desc: '줄은 긴데 맛은 줄만큼은 아니다.'
     },
     {
-      id: 'R10', name: '합정 스시로', category: 'sushi', categoryLabel: '일식',
+      id: 'R10', img: 'assets/food/f10.jpg', name: '합정 스시로', category: 'sushi', categoryLabel: '일식',
       area: '합정동', address: '서울 마포구 월드컵로 3길 7', dist: 680,
       records: 1567, friendScore: 8.7, allScore: 8.9, grade: 'good',
       pin: { x: 148, y: 336 }, tone: 10,
@@ -134,7 +134,7 @@
 
   /* 온보딩 후보 식당(선택 단계) */
   var onboardingPool = restaurants.map(function (r) {
-    return { id: r.id, name: r.name, area: r.area, categoryLabel: r.categoryLabel, category: r.category, tone: r.tone };
+    return { id: r.id, img: r.img, name: r.name, area: r.area, categoryLabel: r.categoryLabel, category: r.category, tone: r.tone };
   });
 
   /* 기록 플로우 비교쌍 후보 — 같은 등급 안에서만 비교(캐논) */
@@ -151,7 +151,11 @@
     return null;
   }
 
+  /* 피드 스트립 보조 컷(더미) */
+  var extraShots = ['assets/food/f11.jpg', 'assets/food/f12.jpg'];
+
   global.HOTAM_DATA = {
+    extraShots: extraShots,
     GRADE: GRADE,
     restaurants: restaurants,
     myRecords: myRecords,

@@ -332,7 +332,7 @@ html[data-rm="1"] .field.is-rejected { animation: none; }
   background: var(--bg-default); color: var(--text-primary);
   border: var(--bw-thin) solid var(--border-default); border-radius: var(--r-ctrl-lg);
   font-size: var(--fs-lg); line-height: var(--lh-lg); caret-color: var(--main-primary);
-  transition: border-color var(--d3) var(--enter), background-color var(--d3) var(--enter), box-shadow var(--d3) var(--enter);
+  transition: border-color var(--d3) var(--standard), background-color var(--d3) var(--standard), border-width var(--d3) var(--standard);
 }
 .input::placeholder { color: var(--text-tertiary); }
 .input:focus { outline: none; border-color: var(--border-focus); border-width: var(--bw-thick); padding: 0 calc(var(--sp-page) - 1px); }
@@ -461,7 +461,7 @@ html[data-rm="1"] .field.is-rejected { animation: none; }
 }
 .dialog-layer.is-shown .dialog { transform: translateY(-50%) scale(1); opacity: 1; }
 .dialog-layer.is-closing .dialog { transition: transform var(--d3) var(--exit), opacity var(--d3) var(--exit); }
-.dialog-layer.is-closing .dialog__scrim { transition: opacity var(--d3) var(--exit) var(--dl-60); }
+.dialog-layer.is-closing .dialog__scrim { transition: opacity var(--d3) var(--exit) var(--d1); }
 .dialog__title { font-size: var(--fs-lg); font-weight: var(--fw-semibold); line-height: var(--lh-lg); margin-bottom: var(--sp-xs); }
 .dialog__desc { font-size: var(--fs-sm); line-height: var(--lh-sm); color: var(--text-secondary); }
 .dialog__actions { display: flex; gap: var(--sp-xs); margin-top: var(--sp-lg); }
@@ -571,18 +571,19 @@ html[data-rm="1"] .field.is-rejected { animation: none; }
 }
 .feed__photos::-webkit-scrollbar { display: none; }
 .feed__photo {
-  flex: none; width: 240px; height: 240px; border-radius: var(--r-md);
+  flex: none; width: 240px; height: 240px; border-radius: var(--r-lg);
   display: grid; place-items: center; color: var(--text-secondary);
+  background-size: cover; background-position: center; overflow: hidden;
 }
 
 .placebar {
   display: flex; align-items: center; gap: var(--sp-xs); width: 100%;
   height: var(--touch-min); padding: 0 var(--sp-sm); margin-top: var(--sp-xs);
-  border: var(--bw-thin) solid var(--border-default); border-radius: var(--r-lg);
-  background: var(--bg-default); text-align: left;
+  border-radius: var(--r-lg);
+  background: var(--bg-surface); text-align: left;
   transition: background-color var(--d3) var(--enter);
 }
-.placebar:active { background: var(--bg-surface); }
+.placebar:active { background: var(--bg-disabled); }
 .placebar__ico { color: var(--text-tertiary); }
 .placebar__name {
   flex: 1; min-width: 0; font-size: var(--fs-sm); font-weight: var(--fw-semibold);
@@ -630,6 +631,15 @@ html[data-rm="1"] .field.is-rejected { animation: none; }
 .act__ico { transition: color var(--d3) var(--standard), transform var(--d3) var(--standard); }
 .act.is-on { color: var(--main-primary); }
 .act.is-on .act__ico { color: var(--main-primary); }
+
+/* 더미 사진 (assets/food) */
+.photo {
+  background-size: cover; background-position: center;
+  background-color: var(--bg-surface);
+}
+.photo > svg { display: none; }
+.pcell.photo { color: var(--text-on-button); }
+.pcell.photo .pcell__bar { background: var(--alpha-white-70); }
 
 /* 사진 플레이스홀더 톤 */
 .ph { background: var(--bg-disabled); }
@@ -879,6 +889,12 @@ html[data-rm="1"] .field.is-rejected { animation: none; }
 .rec-card--a { transform: translateY(calc(var(--sp-xxl) * -1)); opacity: 0; }
 .rec-card--b { transform: translateY(var(--sp-xxl)); opacity: 0; }
 .rec-cards.is-in .rec-card { transform: translateY(0); opacity: 1; }
+/* 비교 도전자 교체: 아래로 퇴장 -> 아래에서 재진입 */
+.rec-cards.is-in .rec-card.is-swapout {
+  transform: translateY(var(--sp-xl)); opacity: 0;
+  transition: transform var(--d3) var(--exit), opacity var(--d3) var(--exit);
+}
+.rec-cards.is-in .rec-card.is-swapin { transform: translateY(var(--sp-xxl)); opacity: 0; transition: none; }
 .rec-vs { display: grid; place-items: center; color: var(--text-tertiary); font-weight: var(--fw-bold); font-size: var(--fs-caption); }
 .rec-dots { display: flex; gap: var(--sp-xxs); justify-content: center; padding: var(--sp-xs); }
 .rec-dot { width: var(--sp-xs); height: var(--sp-xs); border-radius: 50%; background: var(--bg-disabled); transition: background-color var(--d3) var(--standard); }

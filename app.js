@@ -809,7 +809,7 @@
         list.innerHTML = items.map(function (r) {
           var on = App.onboardPicked.indexOf(r.id) > -1;
           return '<button type="button" class="row" data-pick="' + r.id + '">' +
-            '<span class="row__thumb ph-' + r.tone + '">' + icon(r.category, 24, 1.6) + '</span>' +
+            thumb(r, 'row__thumb', 24) +
             '<span class="row__main"><span class="row__title">' + esc(r.name) + '</span>' +
             '<span class="row__meta">' + esc(r.area) + ' · ' + esc(r.categoryLabel) + '</span></span>' +
             '<span class="row__end"><span class="pick' + (on ? ' is-on' : '') + '"><span class="pick__ico">' + icon('check', 16, 2.4) + '</span></span></span>' +
@@ -882,7 +882,7 @@
         var i = App.onboardIndex;
         if (i >= N) { finish(); return; }
         var r = D.byId(picks[i]);
-        card.innerHTML = '<div class="ob-card__photo ph-' + r.tone + '">' + icon(r.category, 32, 1.5) + '</div>' +
+        card.innerHTML = '<div class="ob-card__photo photo" style="background-image:url(&quot;' + r.img + '&quot;)"></div>' +
           '<p class="t-title-lg">' + esc(r.name) + '</p>' +
           '<p class="t-caption c-secondary">' + esc(r.categoryLabel) + ' · ' + esc(r.area) + '</p>';
         qa('.gbtn', el).forEach(function (b) { b.classList.toggle('is-on', App.onboardGrades[r.id] === b.dataset.grade); });
@@ -944,7 +944,8 @@
     if (photos > 0) {
       strip = '<div class="feed__photos">';
       for (var i = 0; i < photos; i++) {
-        strip += '<span class="feed__photo ph-' + (((r.tone + i) % 10) + 1) + '">' + icon(r.category, 44, 1.3) + '</span>';
+        var src = i === 0 ? r.img : D.extraShots[(r.tone + i) % D.extraShots.length];
+        strip += '<span class="feed__photo photo" style="background-image:url(&quot;' + src + '&quot;)"></span>';
       }
       strip += '</div>';
     }
@@ -1198,7 +1199,7 @@
         /* 피그마 S9 시트 행: 썸네일 + 등급칩 + 이름 + 메타 + 찜 */
         sheetList.innerHTML = items.map(function (r) {
           return '<div class="row" data-open="' + r.id + '">' +
-            '<span class="row__thumb row__thumb--lg ph-' + r.tone + '">' + icon(r.category, 28, 1.5) + '</span>' +
+            thumb(r, 'row__thumb row__thumb--lg', 28) +
             '<span class="row__main">' + gradeChip(r.grade, true) +
             '<span class="row__title" style="margin-top:var(--sp-xxs)">' + esc(r.name) + '</span>' +
             '<span class="row__meta">' + esc(r.categoryLabel) + ' · ' + esc(r.area) + ' · 기록 ' + r.records.toLocaleString('ko-KR') + '</span></span>' +
@@ -1422,7 +1423,7 @@
         '<button type="button" class="icon-btn icon-btn--float icon-btn--plain" data-act="more">' + icon('more') + '</button>' +
         '</div>' +
         '<div class="body" id="dBody">' +
-        '<div class="hero"><div class="hero__img ph-' + r.tone + '" id="dHero">' + icon(r.category, 64, 1.2) + '</div><div class="hero__fade"></div></div>' +
+        '<div class="hero"><div class="hero__img photo" id="dHero" style="background-image:url(&quot;' + r.img + '&quot;)"></div><div class="hero__fade"></div></div>' +
         '<div class="pad" style="padding-top:var(--sp-md)">' +
         '<p class="t-caption c-tertiary">' + esc(r.categoryLabel) + ' · ' + esc(r.area) + '</p>' +
         '<h2 class="t-h1" style="margin-top:var(--sp-xxs)">' + esc(r.name) + '</h2>' +
@@ -1583,7 +1584,7 @@
           var items = D.restaurants.filter(function (r) { return !f || r.name.indexOf(f) > -1 || r.area.indexOf(f) > -1; });
           list.innerHTML = items.length ? items.map(function (r) {
             return '<button type="button" class="row" data-pick="' + r.id + '">' +
-              '<span class="row__thumb ph-' + r.tone + '">' + icon(r.category, 24, 1.6) + '</span>' +
+              thumb(r, 'row__thumb', 24) +
               '<span class="row__main"><span class="row__title">' + esc(r.name) + '</span>' +
               '<span class="row__meta">' + esc(r.area) + ' · ' + esc(r.categoryLabel) + '</span></span>' +
               '<span class="row__end">' + icon('right', 20) + '</span></button>';
@@ -1604,7 +1605,7 @@
         var r = D.byId(Modal.picked);
         title.textContent = '어느 정도였나요?';
         host.innerHTML = '<div class="body">' +
-          '<div class="ob-card"><div class="ob-card__photo ph-' + r.tone + '">' + icon(r.category, 32, 1.5) + '</div>' +
+          '<div class="ob-card"><div class="ob-card__photo photo" style="background-image:url(&quot;' + r.img + '&quot;)"></div>' +
           '<p class="t-title-lg">' + esc(r.name) + '</p><p class="t-body-sm c-secondary">' + esc(r.area) + ' · ' + esc(r.categoryLabel) + '</p></div>' +
           '<div class="ob-grades">' +
           '<button type="button" class="gbtn gbtn--good" data-grade="good">좋았어요</button>' +
@@ -1642,15 +1643,39 @@
         var cards = q('#recCards', host);
         nextFrame(function () { cards.classList.add('is-in'); });
 
+        var stepping = false;
         function step(side) {
+          if (stepping) return;
+          stepping = true;
           if (side) {
             var picked = q('[data-side="' + side + '"]', cards);
             picked.classList.add('is-picked');
           }
-          after(T.d3, function () {
+          after(T.d3 + T.d2, function () {
             Modal.compareIndex++;
             if (Modal.compareIndex >= Modal.compareTotal) { Modal.step = 3; Modal.paint(); return; }
-            Modal.paint();
+            /* 스펙 §6 REC ③: 선택 시 "반대편(도전자 카드)만 교체" — 전체 리렌더 대신
+               B 카드만 아래로 퇴장(d3·exit) -> 내용 교체 -> 아래에서 재진입(d5·emphasized-enter) */
+            var nextRival = pool.length
+              ? D.byId(pool[Modal.compareIndex % pool.length].rid)
+              : D.restaurants[(Modal.compareIndex + 4) % D.restaurants.length];
+            var b = q('[data-side="b"]', cards);
+            var a = q('[data-side="a"]', cards);
+            a.classList.remove('is-picked');
+            b.classList.add('is-swapout');
+            after(T.d3, function () {
+              b.outerHTML = recCard('b', nextRival);
+              b = q('[data-side="b"]', cards);
+              b.classList.add('rec-card--b');
+              reflow(b);
+              /* is-in 컨테이너 하에서 --b 초기 오프셋을 강제 후 해제 */
+              b.classList.add('is-swapin');
+              nextFrame(function () { b.classList.remove('is-swapin'); });
+              var cap = q('.t-caption', host);
+              if (cap) cap.innerHTML = '&quot;' + G.choice + '&quot; 끼리 비교 중 · ' + (Modal.compareIndex + 1) + '/' + Modal.compareTotal;
+              qa('.rec-dot', host).forEach(function (d3el, i) { d3el.classList.toggle('is-on', i <= Modal.compareIndex); });
+              after(T.d5, function () { stepping = false; });
+            });
           });
         }
         delegate(cards, 'click', '[data-side]', function (e, t) { step(t.dataset.side); });
@@ -1747,9 +1772,15 @@
     after(T.d5 * 2 + T.d2, function () { field.classList.remove('is-rejected'); });
   }
 
+  /* 더미 사진 썸네일 — img 있으면 사진, 없으면 기존 톤+아이콘 폴백 */
+  function thumb(r, cls, size) {
+    if (r && r.img) return '<span class="' + cls + ' photo" style="background-image:url(&quot;' + r.img + '&quot;)"></span>';
+    return '<span class="' + cls + ' ph-' + (r.tone || 1) + '">' + icon(r.category, size || 24, 1.6) + '</span>';
+  }
+
   function recCard(side, r) {
     return '<button type="button" class="rec-card rec-card--' + side + '" data-side="' + side + '">' +
-      '<span class="rec-card__ph ph-' + r.tone + '">' + icon(r.category, 40, 1.3) + '</span>' +
+      thumb(r, 'rec-card__ph', 40) +
       '<span class="t-title-lg">' + esc(r.name) + '</span>' +
       '<span class="t-caption c-secondary">' + esc(r.area) + ' · ' + esc(r.categoryLabel) + '</span></button>';
   }
@@ -1817,7 +1848,7 @@
         return D.rankPlaces.map(function (p) {
           return '<div class="rankrow" data-open="' + p.rid + '">' +
             '<span class="rankrow__n num">' + p.rank + '</span>' +
-            '<span class="row__thumb ph-' + p.tone + '">' + icon(p.category, 24, 1.6) + '</span>' +
+            thumb(D.byId(p.rid), 'row__thumb', 24) +
             '<span class="row__main"><span class="row__title">' + esc(p.name) + '</span>' +
             '<span class="row__meta">' + esc(p.meta) + '</span></span>' +
             '<span class="scorenum scorenum--' + p.grade + ' num">' + p.score.toFixed(1) + '</span>' +
@@ -1937,8 +1968,7 @@
       function cell(id) {
         var r = D.byId(id);
         var g = r.grade;
-        return '<button type="button" class="pcell ph-' + r.tone + '" data-open="' + r.id + '">' +
-          icon(r.category, 32, 1.3) +
+        return '<button type="button" class="pcell photo" style="background-image:url(&quot;' + r.img + '&quot;)" data-open="' + r.id + '">' +
           '<span class="pcell__bar"><span class="pcell__name">' + esc(r.name) + '</span>' +
           '<span class="pcell__score num scorenum--' + g + '">' + r.allScore.toFixed(1) + '</span></span></button>';
       }
@@ -2054,7 +2084,7 @@
         }
         body.innerHTML = items.map(function (r) {
           return '<div class="row" data-open="' + r.id + '">' +
-            '<span class="row__thumb ph-' + r.tone + '">' + icon(r.category, 24, 1.6) + '</span>' +
+            thumb(r, 'row__thumb', 24) +
             '<span class="row__main"><span class="row__title">' + esc(r.name) + '</span>' +
             '<span class="row__meta">' + esc(r.categoryLabel) + ' · ' + esc(r.area) + '</span></span>' +
             '<span class="scorenum scorenum--' + r.grade + ' num">' + r.allScore.toFixed(1) + '</span></div>';
@@ -2073,9 +2103,16 @@
         input.dispatchEvent(new Event('input'));
       });
       delegate(el, 'click', '[data-pane]', function (e, t) {
+        if (t.dataset.pane === pane) return;
         pane = t.dataset.pane;
         qa('.seg', segs).forEach(function (s) { s.classList.toggle('is-on', s === t); });
-        results(input.value.trim());
+        body.classList.add('is-fadeout');
+        after(T.d2, function () {
+          after(T.dl100, function () {
+            results(input.value.trim());
+            body.classList.remove('is-fadeout');
+          });
+        });
       });
       delegate(el, 'click', '[data-open]', function (e, t) {
         App.detailId = t.dataset.open;

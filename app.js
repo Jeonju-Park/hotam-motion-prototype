@@ -182,17 +182,21 @@
     el.classList.remove('anim-push', 'anim-pop', 'anim-settle', 'anim-tabin', 'anim-tabout', 'anim-root', 'anim-modal-in', 'anim-modal-out', 'is-dragging');
   }
 
+  /* 시작 상태를 반드시 한 프레임 먼저 페인트한 뒤 목표 상태로 전환.
+     (일부 엔진은 트랜지션 부착과 상태 변경이 같은 프레임이면 전환을 건너뛴다) */
   function transPush(from, to, done) {
     ensureDim(from);
     show(to);
     /* DOM 순서와 무관하게 들어오는 화면이 항상 위 (검색->상세 등 역순 쌍 대응) */
     to.classList.add('z-top', 'at-right');
-    reflow(to);
     to.classList.add('anim-push');
     from.classList.add('anim-push');
-    to.classList.remove('at-right');
-    from.classList.add('at-left', 'has-dim');
-    after(T.d6, function () {
+    reflow(to);
+    nextFrame(function () {
+      to.classList.remove('at-right');
+      from.classList.add('at-left', 'has-dim');
+    });
+    after(T.d6 + T.d1, function () {
       clearAnim(to); clearAnim(from);
       to.classList.remove('z-top');
       hide(from); done && done();
@@ -205,12 +209,14 @@
     /* 나가는 화면이 항상 위 */
     from.classList.add('z-top');
     to.classList.add('at-left', 'has-dim');
-    reflow(to);
     to.classList.add('anim-pop');
     from.classList.add('anim-pop');
-    to.classList.remove('at-left', 'has-dim');
-    from.classList.add('at-right');
-    after(T.d5, function () {
+    reflow(to);
+    nextFrame(function () {
+      to.classList.remove('at-left', 'has-dim');
+      from.classList.add('at-right');
+    });
+    after(T.d5 + T.d1, function () {
       clearAnim(to); clearAnim(from);
       from.classList.remove('z-top');
       hide(from); done && done();
@@ -218,28 +224,31 @@
   }
 
   function transTabFade(from, to, done) {
-    from.classList.add('anim-tabout', 'is-fadeout');
-    after(T.d2, function () {
+    from.classList.add('anim-tabout');
+    reflow(from);
+    nextFrame(function () { from.classList.add('is-fadeout'); });
+    after(T.d2 + T.d1, function () {
       clearAnim(from); hide(from);
       after(T.dl100, function () {
         show(to);
-        to.classList.add('is-fadein');
+        to.classList.add('is-fadein', 'anim-tabin');
         reflow(to);
-        to.classList.add('anim-tabin');
-        to.classList.remove('is-fadein');
-        after(T.d4, function () { clearAnim(to); done && done(); });
+        nextFrame(function () { to.classList.remove('is-fadein'); });
+        after(T.d4 + T.d1, function () { clearAnim(to); done && done(); });
       });
     });
   }
 
   function transRoot(from, to, done) {
     show(to);
-    to.classList.add('is-fadein');
+    to.classList.add('is-fadein', 'anim-root', 'z-top');
+    from.classList.add('anim-root');
     reflow(to);
-    to.classList.add('anim-root');
-    from.classList.add('anim-root', 'is-fadeout');
-    to.classList.remove('is-fadein');
-    after(T.d4, function () { clearAnim(to); clearAnim(from); hide(from); done && done(); });
+    nextFrame(function () {
+      to.classList.remove('is-fadein');
+      from.classList.add('is-fadeout');
+    });
+    after(T.d4 + T.d1, function () { clearAnim(to); clearAnim(from); to.classList.remove('z-top'); hide(from); done && done(); });
   }
 
   /* 탭바 승강 */
@@ -1535,11 +1544,10 @@
       lock();
       tabbarDown();
       viewport.classList.add('is-behind');
-      recordEl.classList.add('is-active', 'at-down');
+      recordEl.classList.add('is-active', 'at-down', 'anim-modal-in');
       reflow(recordEl);
-      recordEl.classList.add('anim-modal-in');
-      recordEl.classList.remove('at-down');
-      after(T.d7, function () { clearAnim(recordEl); });
+      nextFrame(function () { recordEl.classList.remove('at-down'); });
+      after(T.d7 + T.d1, function () { clearAnim(recordEl); });
       location.hash = 'record';
     },
 
@@ -1547,11 +1555,13 @@
       if (!Modal.open) return;
       Modal.open = false;
       lock();
-      recordEl.classList.add('anim-modal-out', 'at-down');
+      recordEl.classList.add('anim-modal-out');
+      reflow(recordEl);
+      nextFrame(function () { recordEl.classList.add('at-down'); });
       viewport.classList.remove('is-behind');
       frame.classList.remove('is-modalbg');
       tabbarUp(T.dl60);
-      after(T.d5, function () {
+      after(T.d5 + T.d1, function () {
         clearAnim(recordEl);
         recordEl.classList.remove('is-active', 'at-down');
         recordEl.innerHTML = '';

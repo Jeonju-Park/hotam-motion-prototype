@@ -50,3 +50,15 @@
 - 산출물: `index.html` `tokens.css` `app.css` `app.js` `data.js` · `verify/{verify,shots,crop}.mjs` · `reference/`(피그마 원본 9 + 크롭 1 + 스크린샷 15 + 메타 2) · `PROGRESS.md` `QA_REPORT.md`
 - 최종 상태: **DoD 8/8 통과 · verify 12 pass / 0 fail · 콘솔 에러 0**
 - 정주 확인 필요 2건은 `QA_REPORT.md` §2 D2에 정리 (캐논 토큰 파일 갱신 / `radius/full` 대 pill 금지 규칙 충돌)
+
+## 3차 — 정주 피드백 9건 (08-19)
+
+| 시각 | 내용 | 검증 |
+|---|---|---|
+| 18:20 | 스타일가이드(165:1453) 실측 수집 · 진입 보드(712:9161) 크롭 | reference/figma_styleguide.png · crop_login.png |
+| 18:35 | (6) 다이얼로그 자동 닫힘 수정 — goto()의 지연 클리어 + 리스너 누적 | 브라우저 재현 후 통과 |
+| 18:45 | (1) 피드 카드 전체 탭 -> 상세 · (2) Pop = 엣지 스와이프 통일(d5·emphasized-exit) | 브라우저 순회 |
+| 18:55 | (3) 모달 top 48px + viewport filter 트랜지션 제거 · (4·5) 인풋 filled 잉크 2px | 스크린샷 |
+| 19:10 | (7) A0 마스코트 스플래시 + 소셜 3종 + 이메일 로그인 분리 · ON1/ON2 디자인 정합 | crop 대조 |
+| 19:20 | (8) 미리보기 아래 드래그 dismiss + 목록 시트 복귀 · (9) 랭킹 스코프 Trans3 페이드 | 브라우저 재현 |
+| 19:30 | 스크린샷 18장 재캡처 · verify 12 pass / 0 fail · 배포 | Pages |

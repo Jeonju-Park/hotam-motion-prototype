@@ -248,7 +248,7 @@
      5. 라우터
      ========================================================== */
   var Screens = {};
-  var ROUTE_ORDER = ['login', 'onboard1', 'onboard2', 'home', 'explore', 'rank', 'profile', 'detail', 'settings', 'search', 'inbox', 'components', 'demoa', 'demob', 'democ'];
+  var ROUTE_ORDER = ['login', 'onboard1', 'onboard2', 'home', 'explore', 'rank', 'profile', 'detail', 'settings', 'search', 'inbox', 'emaillogin', 'components', 'demoa', 'demob', 'democ'];
 
   function renderIfNeeded(id, params) {
     var el = scr(id);
@@ -375,9 +375,10 @@
     var commit = p > 0.4 || s.v > 0.5;
     s.fromEl.classList.remove('is-dragging');
     s.toEl.classList.remove('is-dragging');
-    /* 가이드 §2: 제스처 정착은 "남은 거리만 d4·exit" */
-    s.fromEl.classList.add('anim-settle');
-    s.toEl.classList.add('anim-settle');
+    /* 정주 결정(08-19): 엣지 스와이프 정착 = 버튼 Pop과 동일(d5·emphasized-exit).
+       가이드 §2의 "남은 거리만 d4·exit"보다 일관성 우선. */
+    s.fromEl.classList.add('anim-pop');
+    s.toEl.classList.add('anim-pop');
     if (commit) haptic('light');
     if (commit) {
       s.fromEl.style.transform = 'translateX(100%)';
@@ -387,7 +388,7 @@
       var toEntry = current();
       applyChrome(toEntry.route);
       location.hash = toEntry.route;
-      after(T.d4, function () {
+      after(T.d5, function () {
         clearAnim(s.fromEl); clearAnim(s.toEl);
         hide(s.fromEl);
         s.toEl.style.transform = ''; s.toEl.classList.remove('has-dim');
@@ -397,7 +398,7 @@
       s.fromEl.style.transform = 'translateX(0)';
       s.toEl.style.transform = 'translateX(' + (-0.25 * s.w) + 'px)';
       if (s.dim) s.dim.style.opacity = '1';
-      after(T.d4, function () {
+      after(T.d5, function () {
         clearAnim(s.fromEl); clearAnim(s.toEl);
         s.fromEl.style.transform = '';
         hide(s.toEl);
@@ -447,7 +448,14 @@
   }
 
   var Dialog = {
+    opt: null,
+    open: false,
+    timer: null,
     show: function (opt) {
+      /* 이전 닫힘 타이머가 새 다이얼로그를 지우지 않도록 취소 */
+      if (Dialog.timer) { clearTimeout(Dialog.timer); Dialog.timer = null; }
+      Dialog.opt = opt;
+      Dialog.open = true;
       dialogLayer.innerHTML =
         '<div class="dialog__scrim"></div>' +
         '<div class="dialog" role="dialog" aria-modal="true">' +
@@ -457,26 +465,38 @@
         '<button type="button" class="btn btn--text" data-act="cancel">' + esc(opt.cancel || '취소') + '</button>' +
         '<button type="button" class="btn ' + (opt.danger ? 'btn--danger' : 'btn--primary') + '" data-act="ok">' + esc(opt.ok || '확인') + '</button>' +
         '</div></div>';
+      dialogLayer.classList.remove('is-closing');
       dialogLayer.classList.add('is-on');
       reflow(dialogLayer);
       dialogLayer.classList.add('is-shown');
-      delegate(dialogLayer, 'click', '[data-act]', function (e, t) {
-        var act = t.dataset.act;
-        Dialog.hide();
-        if (act === 'ok' && opt.onOk) opt.onOk();
-        if (act === 'cancel' && opt.onCancel) opt.onCancel();
-      });
-      on(q('.dialog__scrim', dialogLayer), 'click', function () { Dialog.hide(); opt.onCancel && opt.onCancel(); });
     },
     hide: function () {
+      if (!Dialog.open) return;   /* 열려 있지 않으면 no-op (지연 클리어가 새 다이얼로그를 죽이는 버그 방지) */
+      Dialog.open = false;
+      Dialog.opt = null;
       dialogLayer.classList.remove('is-shown');
       dialogLayer.classList.add('is-closing');
-      after(T.d3 + T.dl60, function () {
+      Dialog.timer = after(T.d3 + T.dl60, function () {
+        Dialog.timer = null;
+        if (Dialog.open) return;
         dialogLayer.classList.remove('is-on', 'is-closing');
         dialogLayer.innerHTML = '';
       });
     }
   };
+  /* 리스너는 1회만 바인딩 — show()마다 누적되던 delegate 제거 */
+  delegate(dialogLayer, 'click', '[data-act]', function (e, t) {
+    var opt = Dialog.opt, act = t.dataset.act;
+    Dialog.hide();
+    if (!opt) return;
+    if (act === 'ok' && opt.onOk) opt.onOk();
+    if (act === 'cancel' && opt.onCancel) opt.onCancel();
+  });
+  delegate(dialogLayer, 'click', '.dialog__scrim', function () {
+    var opt = Dialog.opt;
+    Dialog.hide();
+    if (opt && opt.onCancel) opt.onCancel();
+  });
 
   /* 스켈레톤: 200ms(d4) 지연 노출 + 최소 300ms(d6) 유지 */
   function deferredSkeleton(host, skeletonHTML, loadMs, renderFn) {
@@ -658,27 +678,84 @@
   /* ==========================================================
      10. 화면 — A0 로그인
      ========================================================== */
+  /* 마스코트 탐이 — 상단 오렌지 면에서 얼굴이 내려다보고 앞발이 경계에 걸친다 */
+  function tamiSvg() {
+    return '<svg class="tami" viewBox="0 0 390 300" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+      '<g class="tami__face">' +
+      '<path d="M195 34v42" />' +
+      '<path d="M150 52c14-9 30-13 45-13s31 4 45 13" />' +
+      '<path d="M163 76c10-5 21-8 32-8s22 3 32 8" />' +
+      '<ellipse class="tami__eye" cx="158" cy="106" rx="10" ry="16" />' +
+      '<ellipse class="tami__eye" cx="232" cy="106" rx="10" ry="16" />' +
+      '<path class="tami__nose" d="M181 122h28l-14 15z" />' +
+      '</g>' +
+      '<circle class="tami__cheek" cx="174" cy="152" r="26" />' +
+      '<circle class="tami__cheek" cx="216" cy="152" r="26" />' +
+      '<g class="tami__paw">' +
+      '<path d="M112 268h50a11 11 0 0 1 11 11v26a14 14 0 0 1-14 14h-44a14 14 0 0 1-14-14v-26a11 11 0 0 1 11-11z" />' +
+      '<path class="tami__toe" d="M128 290v16M145 290v16" />' +
+      '</g>' +
+      '<g class="tami__paw">' +
+      '<path d="M228 268h50a11 11 0 0 1 11 11v26a14 14 0 0 1-14 14h-44a14 14 0 0 1-14-14v-26a11 11 0 0 1 11-11z" />' +
+      '<path class="tami__toe" d="M244 290v16M261 290v16" />' +
+      '</g>' +
+      '</svg>';
+  }
+  /* 워드마크 — 'o' 위의 오렌지 점이 signboard 마크 */
+  function wordmark(size) {
+    return '<span class="wm' + (size ? ' wm--' + size : '') + '">h<span class="wm__o">o</span>tam</span>';
+  }
+  var kakaoIcon = '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">' +
+    '<path d="M12 4C7 4 3 7.1 3 10.9c0 2.4 1.6 4.5 4.1 5.7l-.9 3.3c-.1.3.3.6.6.4l3.9-2.6c.4 0 .9.1 1.3.1 5 0 9-3.1 9-6.9S17 4 12 4z"/></svg>';
+  var naverIcon = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">' +
+    '<path d="M14.2 4v8.1L9.6 4H4v16h5.8v-8.1L14.4 20H20V4z"/></svg>';
+  var googleIcon = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">' +
+    '<path class="g-blue" d="M21.6 12.2c0-.7-.1-1.4-.2-2H12v3.9h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.4z"/>' +
+    '<path class="g-green" d="M12 22c2.7 0 5-.9 6.6-2.4l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.7-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22z"/>' +
+    '<path class="g-yellow" d="M6.4 14c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2V7.4H3.1a10 10 0 0 0 0 9.2z"/>' +
+    '<path class="g-red" d="M12 5.9c1.5 0 2.8.5 3.8 1.5l2.8-2.8C16.9 3 14.7 2 12 2a10 10 0 0 0-8.9 5.4L6.4 10c.8-2.4 3-4.1 5.6-4.1z"/></svg>';
+
+  /* A0 로그인 (피그마 712:9161) — 마스코트 스플래시 + 소셜 3종 + 이메일 링크 */
   Screens.login = {
     render: function (el) {
       el.innerHTML =
         '<div class="login">' +
-        '<div class="login__brand">' +
-        '<div class="login__logo">' + icon('pin', 32, 2) + '<span class="login__word">hotam</span></div>' +
-        '<p class="login__tag t-body-lg c-secondary">별점 말고 비교로 기록하는 미식 노트</p>' +
+        '<div class="login__hero">' + tamiSvg() + '</div>' +
+        '<div class="login__body">' +
+        '<div class="login__brand">' + wordmark('lg') +
+        '<p class="login__tag">맛집 하나 알려주면<br>안 잡아먹지</p></div>' +
+        '<div class="login__social">' +
+        '<button type="button" class="btn btn--lg btn--full btn--kakao" data-act="signup">' + kakaoIcon + '카카오로 시작하기</button>' +
+        '<button type="button" class="btn btn--lg btn--full btn--google" data-act="signup">' + googleIcon + 'Google로 시작하기</button>' +
+        '<button type="button" class="btn btn--lg btn--full btn--naver" data-act="signup">' + naverIcon + '네이버로 시작하기</button>' +
         '</div>' +
-        '<label class="field"><span class="field__label">이메일</span>' +
+        '<div class="login__links">' +
+        '<button type="button" class="login__link" data-act="email-login">이메일 로그인</button>' +
+        '<span class="login__sep"></span>' +
+        '<button type="button" class="login__link" data-act="signup">이메일 회원가입</button>' +
+        '</div></div></div>';
+
+      /* 소셜·회원가입 = Trans5로 온보딩 / 이메일 로그인 = 이메일 입력 화면 */
+      delegate(el, 'click', '[data-act="signup"]', function () { navigate('onboard1', { type: 'root' }); });
+      delegate(el, 'click', '[data-act="email-login"]', function () { navigate('emaillogin', { type: 'push' }); });
+    }
+  };
+
+  /* A0-1 이메일 로그인 (피그마 712:9161 2행) */
+  Screens.emaillogin = {
+    render: function (el) {
+      el.innerHTML =
+        '<div class="appbar"><button type="button" class="icon-btn" data-act="back">' + icon('left') + '</button>' +
+        '<span class="appbar__title">이메일 로그인</span></div>' +
+        '<div class="body pad" style="padding-top:var(--sp-lg)">' +
+        '<label class="field" id="fEmail"><span class="field__label">이메일</span>' +
         '<span class="field__wrap"><input class="input" type="email" id="loginEmail" placeholder="hotam@example.com" autocomplete="off"></span>' +
         '<span class="field__help" id="loginEmailHelp"></span></label>' +
-        '<label class="field"><span class="field__label">비밀번호</span>' +
+        '<label class="field" id="fPw"><span class="field__label">비밀번호</span>' +
         '<span class="field__wrap"><input class="input" type="password" id="loginPw" placeholder="6자 이상" autocomplete="off"></span>' +
         '<span class="field__help" id="loginPwHelp"></span></label>' +
-        '<button type="button" class="btn btn--lg btn--primary btn--full" id="loginCta" disabled>로그인</button>' +
-        '<div class="login__social">' +
-        '<button type="button" class="btn btn--lg btn--social btn--full" data-act="signup">' + icon('users', 20, 1.8) + '카카오로 계속하기</button>' +
-        '<button type="button" class="btn btn--lg btn--social btn--full" data-act="signup">' + icon('inbox', 20, 1.8) + '이메일로 가입하기</button>' +
         '</div>' +
-        '<p class="login__foot t-caption">계속하면 이용약관과 개인정보 처리방침에 동의하게 됩니다</p>' +
-        '</div>';
+        '<div class="cta-dock"><button type="button" class="btn btn--lg btn--primary btn--full" id="loginCta" disabled>로그인</button></div>';
 
       var email = q('#loginEmail', el), pw = q('#loginPw', el), cta = q('#loginCta', el);
       var eh = q('#loginEmailHelp', el), ph = q('#loginPwHelp', el);
@@ -698,10 +775,8 @@
       }
       on(email, 'input', validate);
       on(pw, 'input', validate);
-      /* 기존 회원 로그인 = Trans5로 홈 (스펙 §6 A0)
-         신규 가입(소셜/이메일) = Trans5로 온보딩 -> ON1 -> ON2 -> 홈 */
       on(cta, 'click', function () { navigate('home', { type: 'root' }); });
-      delegate(el, 'click', '[data-act="signup"]', function () { navigate('onboard1', { type: 'root' }); });
+      delegate(el, 'click', '[data-act="back"]', function () { back(); });
     }
   };
 
@@ -711,16 +786,15 @@
   Screens.onboard1 = {
     render: function (el) {
       el.innerHTML =
-        '<div class="appbar"><button type="button" class="icon-btn" data-act="back">' + icon('left') + '</button>' +
-        '<span class="appbar__title">가본 곳 고르기</span>' +
-        '<button type="button" class="btn btn--sm btn--text" data-act="skip">건너뛰기</button></div>' +
-        '<div class="stepbar"><div class="stepbar__fill" style="width:50%"></div></div>' +
-        '<div class="ob-head"><h2 class="ob-head__title">가본 식당을 골라 주세요</h2>' +
-        '<p class="ob-head__desc">3곳 이상 고르면 첫 랭킹을 만들 수 있어요</p></div>' +
+        '<div class="appbar"><button type="button" class="icon-btn" data-act="back">' + icon('left') + '</button></div>' +
+        '<div class="ob-head"><h2 class="ob-head__title">가보신 가게를 모두 골라주세요</h2>' +
+        '<p class="ob-head__desc">많이 골라서 평가할수록 추천이 정확해져요</p></div>' +
         '<div class="pad"><span class="field__wrap">' + '<span class="field__ico">' + icon('search', 20) + '</span>' +
-        '<input class="input input--md input--icon" id="obSearch" placeholder="식당 이름으로 찾기"></span></div>' +
+        '<input class="input input--md input--icon" id="obSearch" placeholder="식당 검색"></span></div>' +
         '<div class="body" id="obList"></div>' +
-        '<div class="cta-dock"><button type="button" class="btn btn--lg btn--primary btn--full" id="obCta" disabled>0곳 평가하기</button></div>';
+        '<div class="cta-dock cta-dock--ob">' +
+        '<button type="button" class="ob-skip" data-act="skip">건너뛰기</button>' +
+        '<button type="button" class="btn btn--lg btn--primary btn--full" id="obCta" disabled>평가하기</button></div>';
 
       var list = q('#obList', el), search = q('#obSearch', el), cta = q('#obCta', el);
 
@@ -728,9 +802,8 @@
         var f = (filter || '').trim();
         var items = D.onboardingPool.filter(function (r) { return !f || r.name.indexOf(f) > -1 || r.area.indexOf(f) > -1; });
         if (!items.length) {
-          list.innerHTML = '<div class="state is-in"><span class="state__ico state__seq">' + icon('search', 32, 1.6) + '</span>' +
-            '<p class="state__title state__seq">찾는 곳이 없어요</p>' +
-            '<p class="state__desc state__seq">이름을 조금 줄여서 다시 찾아보세요</p></div>';
+          list.innerHTML = '<div class="state is-in">' +
+            '<p class="state__desc state__seq">찾으시는 식당이 없나요? <button type="button" class="ob-addlink" data-act="add">식당 추가하기</button></p></div>';
           return;
         }
         list.innerHTML = items.map(function (r) {
@@ -745,7 +818,7 @@
       }
       function sync() {
         var n = App.onboardPicked.length;
-        cta.textContent = n + '곳 평가하기';
+        cta.textContent = n > 0 ? n + '곳 평가하기' : '평가하기';
         cta.disabled = n === 0;
       }
       draw('');
@@ -759,6 +832,7 @@
         sync();
       });
       delegate(el, 'click', '[data-act="skip"]', function () { navigate('home', { type: 'root' }); });
+      delegate(el, 'click', '[data-act="add"]', function () { Toast.show('식당 추가는 이번 범위 밖이에요'); });
       delegate(el, 'click', '[data-act="back"]', function () { navigate('login', { type: 'root' }); });
       on(cta, 'click', function () {
         App.onboardIndex = 0;
@@ -769,7 +843,11 @@
     },
     onEnter: function (el) {
       var cta = q('#obCta', el);
-      if (cta) { cta.textContent = App.onboardPicked.length + '곳 평가하기'; cta.disabled = !App.onboardPicked.length; }
+      if (cta) {
+        var n = App.onboardPicked.length;
+        cta.textContent = n > 0 ? n + '곳 평가하기' : '평가하기';
+        cta.disabled = !n;
+      }
     }
   };
 
@@ -783,35 +861,33 @@
       var N = picks.length;
 
       el.innerHTML =
-        '<div class="appbar"><button type="button" class="icon-btn" data-act="back">' + icon('left') + '</button>' +
-        '<span class="appbar__title">가본 곳 평가</span></div>' +
-        '<div class="stepbar"><div class="stepbar__fill" id="obFill"></div></div>' +
-        '<div class="ob-head"><h2 class="ob-head__title" id="obTitle"></h2>' +
-        '<p class="ob-head__desc">어느 정도였는지만 골라 주세요</p></div>' +
-        '<div class="body"><div class="ob-card" id="obCard"></div>' +
-        '<div class="ob-grades" id="obGrades">' +
-        '<button type="button" class="gbtn gbtn--good" data-grade="good">좋았어요</button>' +
-        '<button type="button" class="gbtn gbtn--soso" data-grade="soso">그저그래요</button>' +
-        '<button type="button" class="gbtn gbtn--bad" data-grade="bad">별로였어요</button>' +
+        '<div class="appbar"><button type="button" class="icon-btn" data-act="back">' + icon('left') + '</button></div>' +
+        '<div class="body body--ob2">' +
+        '<div class="ob-card ob-card--center" id="obCard"></div>' +
+        '<h2 class="ob2-q">해당 식당, 어떠셨나요?</h2>' +
+        '<div class="ob-grades ob-grades--row" id="obGrades">' +
+        '<button type="button" class="gbtn gbtn--sm gbtn--good" data-grade="good">좋았어요</button>' +
+        '<button type="button" class="gbtn gbtn--sm gbtn--soso" data-grade="soso">그저그래요</button>' +
+        '<button type="button" class="gbtn gbtn--sm gbtn--bad" data-grade="bad">별로였어요</button>' +
         '</div>' +
-        '<div class="pad" style="padding-top:var(--sp-md)"><button type="button" class="btn btn--text btn--full" data-act="unknown">모르겠어요</button></div>' +
+        '<div class="pad" style="padding-top:var(--sp-sm)"><button type="button" class="btn btn--soft-gray btn--full" data-act="unknown">모르겠어요</button></div>' +
         '</div>' +
-        '<div class="cta-dock"><button type="button" class="btn btn--lg btn--primary btn--full" id="obNext" disabled></button></div>';
+        '<div class="cta-dock cta-dock--ob">' +
+        '<button type="button" class="ob-skip" data-act="skip">전체 건너뛰기</button>' +
+        '<button type="button" class="btn btn--lg btn--primary btn--full" id="obNext" disabled></button></div>';
 
-      var card = q('#obCard', el), fill = q('#obFill', el), title = q('#obTitle', el), next = q('#obNext', el);
+      var card = q('#obCard', el), next = q('#obNext', el);
 
       function draw() {
         var i = App.onboardIndex;
         if (i >= N) { finish(); return; }
         var r = D.byId(picks[i]);
-        title.textContent = r.name + ' 어땠나요?';
-        fill.style.width = Math.round(((i + 1) / N) * 100) + '%';
         card.innerHTML = '<div class="ob-card__photo ph-' + r.tone + '">' + icon(r.category, 32, 1.5) + '</div>' +
           '<p class="t-title-lg">' + esc(r.name) + '</p>' +
-          '<p class="t-body-sm c-secondary">' + esc(r.area) + ' · ' + esc(r.categoryLabel) + '</p>';
+          '<p class="t-caption c-secondary">' + esc(r.categoryLabel) + ' · ' + esc(r.area) + '</p>';
         qa('.gbtn', el).forEach(function (b) { b.classList.toggle('is-on', App.onboardGrades[r.id] === b.dataset.grade); });
         next.disabled = !App.onboardGrades[r.id];
-        next.textContent = (i === N - 1) ? '평가 완료하기' : '다음 (' + (i + 1) + '/' + N + ')';
+        next.textContent = (i === N - 1) ? '평가 완료하기 (' + N + '/' + N + ')' : '다음 평가하기 (' + (i + 1) + '/' + N + ')';
       }
       function step() {
         App.onboardIndex++;
@@ -819,7 +895,6 @@
         draw();
       }
       function finish() {
-        fill.style.width = '100%';
         navigate('home', { type: 'root' });
         after(T.d4, function () { Toast.show('첫 기록 ' + N + '곳이 저장됐어요'); });
       }
@@ -830,6 +905,7 @@
         next.disabled = false;
       });
       delegate(el, 'click', '[data-act="unknown"]', step);
+      delegate(el, 'click', '[data-act="skip"]', function () { navigate('home', { type: 'root' }); });
       delegate(el, 'click', '[data-act="back"]', function () {
         if (App.onboardIndex > 0) { App.onboardIndex--; draw(); } else back();
       });
@@ -872,7 +948,7 @@
       }
       strip += '</div>';
     }
-    return '<article class="feed" data-feed="' + item.id + '">' +
+    return '<article class="feed" data-feed="' + item.id + '" data-opencard="' + r.id + '">' +
       '<div class="feed__head">' +
       '<span class="avatar av-' + item.avatar + '">' + esc(item.user.slice(0, 1)) + '</span>' +
       '<span class="feed__who"><span class="feed__nick">' + esc(item.user) + '</span>' +
@@ -922,7 +998,7 @@
   Screens.home = {
     render: function (el) {
       el.innerHTML =
-        '<div class="appbar"><span class="wordmark">hotam</span>' +
+        '<div class="appbar"><span class="wordmark">h<span class="wm__o">o</span>tam</span>' +
         '<button type="button" class="icon-btn icon-btn--plain" data-act="search">' + icon('search') + '</button>' +
         '<button type="button" class="icon-btn icon-btn--plain" data-act="inbox">' + icon('bell') + '</button></div>' +
         '<div class="segs"><button type="button" class="seg is-on" data-pane="reco">추천</button>' +
@@ -970,6 +1046,13 @@
         App.detailId = t.dataset.open;
         scr('detail').dataset.rendered = '';
         navigate('detail', { type: 'push', params: { id: t.dataset.open } });
+      });
+      /* 카드 아무 곳이나 탭 = 상세 (버튼류 제외) */
+      delegate(el, 'click', '[data-opencard]', function (e, t) {
+        if (e.target.closest('[data-open],[data-like],[data-comment],[data-share],[data-wish],[data-more],[data-follow]')) return;
+        App.detailId = t.dataset.opencard;
+        scr('detail').dataset.rendered = '';
+        navigate('detail', { type: 'push', params: { id: t.dataset.opencard } });
       });
       delegate(el, 'click', '[data-wish]', function (e, t) { toggleWish(t, t.dataset.wish); });
       delegate(el, 'click', '[data-share]', function () { Toast.show('공유 링크를 복사했어요'); });
@@ -1213,7 +1296,14 @@
           '<div class="pad" style="padding-bottom:var(--sp-page)"><button type="button" class="btn btn--lg btn--primary btn--full" data-rec="' + r.id + '">방문 기록하기</button></div>';
 
         if (!pv) {
-          pv = new PreviewSheet(previewEl, function () { goDetail(previewCurrent, true); });
+          pv = new PreviewSheet(previewEl,
+            function () { goDetail(previewCurrent, true); },
+            /* 아래로 dismiss -> 핀 해제 + 목록 시트 Peek 복귀 */
+            function () {
+              previewCurrent = null;
+              qa('.pin', mapInner).forEach(function (p) { p.classList.remove('is-on'); });
+              after(T.d4, function () { sheet.open(0); });
+            });
         }
         previewCurrent = id;
         pv.open();
@@ -1240,14 +1330,21 @@
     },
     onEnter: function (el) {
       if (App.fromPreview) { App.fromPreview = false; el._reopenPreview && el._reopenPreview(); }
-      else if (el._sheet && el._sheet.dismissed) el._sheet.open(el._openIndex ? el._openIndex() : 0);
+      else {
+        var pvEl = q('#previewSheet', el);
+        var previewShowing = pvEl && !pvEl.hidden && pvEl.classList.contains('is-shown');
+        /* 미리보기가 떠 있으면 목록 시트를 다시 올리지 않는다(대체 관계 유지) */
+        if (!previewShowing && el._sheet && el._sheet.dismissed) el._sheet.open(el._openIndex ? el._openIndex() : 0);
+      }
     }
   };
 
-  /* 미리보기 시트: 고정 높이 + 위로 드래그 40% or 0.5px/ms -> 상세 확장 */
-  function PreviewSheet(el, onExpand) {
+  /* 미리보기 시트: 고정 높이 · 위로 드래그(40% or 0.5px/ms) -> 상세 확장
+     아래로 드래그(30% or 0.5px/ms) -> 닫힘 + 목록 시트 Peek 복귀 */
+  function PreviewSheet(el, onExpand, onDismiss) {
     this.el = el;
     this.onExpand = onExpand;
+    this.onDismiss = onDismiss;
     this.h = 0;
     this.bind();
   }
@@ -1279,20 +1376,31 @@
     });
     on(this.el, 'pointermove', function (e) {
       if (!drag) return;
-      var dy = Math.max(0, drag.y0 - e.clientY);
+      var dy = drag.y0 - e.clientY;   /* 위로 + / 아래로 - */
       var now = performance.now();
       if (now > drag.lastT) drag.v = (drag.lastY - e.clientY) / (now - drag.lastT);
       drag.lastY = e.clientY; drag.lastT = now;
-      self.el.style.transform = 'translateY(' + (-dy * 0.6) + 'px)';
+      /* 위로는 0.6배 저항, 아래로는 1:1 추종 */
+      self.el.style.transform = 'translateY(' + (dy > 0 ? -dy * 0.6 : -dy) + 'px)';
     });
     function end(e) {
       if (!drag) return;
       var d = drag; drag = null;
-      var dy = Math.max(0, d.y0 - e.clientY);
+      var dy = d.y0 - e.clientY;
       self.el.classList.remove('is-dragging');
+      if (dy > 0 && (dy / d.h > 0.4 || d.v > 0.5)) {
+        self.el.classList.add('is-snapping');
+        self.el.style.transform = 'translateY(0)';
+        self.onExpand();
+        return;
+      }
+      if (dy < 0 && (-dy / d.h > 0.3 || d.v < -0.5)) {
+        self.close();
+        self.onDismiss && self.onDismiss();
+        return;
+      }
       self.el.classList.add('is-snapping');
       self.el.style.transform = 'translateY(0)';
-      if (dy / d.h > 0.4 || d.v > 0.5) self.onExpand();
     }
     on(this.el, 'pointerup', end);
     on(this.el, 'pointercancel', end);
@@ -1747,8 +1855,16 @@
         });
       });
       delegate(el, 'click', '[data-scope]', function (e, t) {
+        if (t.dataset.scope === scope) return;
         scope = t.dataset.scope;
-        paint();
+        qa('.seg', body).forEach(function (s2) { s2.classList.toggle('is-on', s2.dataset.scope === scope); });
+        var list = q('#rankList', body);
+        if (list) {
+          list.classList.add('is-fadeout');
+          after(T.d2, function () {
+            after(T.dl100, function () { paint(); });
+          });
+        } else paint();
       });
       delegate(el, 'click', '[data-filter]', function () { Toast.show('필터 시트는 이번 범위 밖이에요'); });
       delegate(el, 'click', '[data-follow]', function (e, t) {
@@ -2223,12 +2339,12 @@
           App.detailId = 'R02';
           scr('detail').dataset.rendered = '';
           navigate('detail', { type: 'push', params: { id: 'R02' }, force: true });
-          after(T.d6 + T.d7, function () { back({ force: true }); });
+          after(T.d6 + T.d8 + T.d5, function () { back({ force: true }); });
         });
       }
     },
     {
-      k: 'edge', label: '엣지 스와이프 Pop', spec: '1:1 추종 · 임계 40% / 0.5px/ms · 정착 d4·exit',
+      k: 'edge', label: '엣지 스와이프 Pop', spec: '1:1 추종 · 임계 40% / 0.5px/ms · 정착 = Pop 동일',
       run: function () {
         goto('home', function () {
           App.detailId = 'R04';

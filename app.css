@@ -112,7 +112,8 @@ body.is-bare .frame { border-radius: var(--r-none); box-shadow: none; }
   position: absolute; inset: 0; overflow: hidden;
   background: var(--bg-default);
   transform-origin: 50% 12%;
-  transition: transform var(--d7) var(--enter), border-radius var(--d7) var(--enter), filter var(--d7) var(--enter);
+  will-change: transform;
+  transition: transform var(--d7) var(--enter), border-radius var(--d7) var(--enter);
 }
 .viewport.is-behind { transform: scale(var(--modal-bg-scale)); border-radius: var(--r-lg); }
 .viewport.is-behind::after {
@@ -147,8 +148,7 @@ body.is-bare .frame { border-radius: var(--r-none); box-shadow: none; }
 .scr.anim-push  { transition: transform var(--d6) var(--emphasized-enter); }
 .scr.anim-push .scr__dim { transition: opacity var(--d6) var(--standard); }
 .scr.anim-pop   { transition: transform var(--d5) var(--emphasized-exit); }
-.scr.anim-settle { transition: transform var(--d4) var(--exit); }
-.scr.anim-settle .scr__dim { transition: opacity var(--d4) var(--exit); }
+/* 엣지 스와이프 정착 = anim-pop 재사용 (정주 결정 08-19: Pop과 동일 프로파일) */
 .scr.anim-pop .scr__dim { transition: opacity var(--d5) var(--standard); }
 .scr.anim-modal-in  { transition: transform var(--d7) var(--enter); }
 .scr.anim-modal-out { transition: transform var(--d5) var(--exit); }
@@ -164,7 +164,6 @@ html[data-rm="1"] .scr.at-left,
 html[data-rm="1"] .scr.at-down { transform: none; opacity: 0; }
 html[data-rm="1"] .scr.anim-push,
 html[data-rm="1"] .scr.anim-pop,
-html[data-rm="1"] .scr.anim-settle,
 html[data-rm="1"] .scr.anim-modal-in,
 html[data-rm="1"] .scr.anim-modal-out { transition: opacity var(--d4) var(--standard); }
 html[data-rm="1"] .viewport.is-behind { transform: none; }
@@ -183,7 +182,7 @@ html[data-rm="1"] .research { transform: translateX(-50%); }
 
 @media (prefers-reduced-motion: reduce) {
   .scr.at-right, .scr.at-left, .scr.at-down { transform: none; opacity: 0; }
-  .scr.anim-push, .scr.anim-pop, .scr.anim-settle,
+  .scr.anim-push, .scr.anim-pop,
   .scr.anim-modal-in, .scr.anim-modal-out { transition: opacity var(--d4) var(--standard); }
   .viewport.is-behind { transform: none; }
   .toast, .sheet__seq, .state__seq, .reveal__chip, .reveal__cta, .reveal__cap { transform: none; }
@@ -337,7 +336,11 @@ html[data-rm="1"] .field.is-rejected { animation: none; }
 }
 .input::placeholder { color: var(--text-tertiary); }
 .input:focus { outline: none; border-color: var(--border-focus); border-width: var(--bw-thick); padding: 0 calc(var(--sp-page) - 1px); }
-.input.is-filled { border-color: var(--border-filled); }
+.input.is-filled {
+  border-color: var(--border-filled); border-width: var(--bw-thick);
+  padding: 0 calc(var(--sp-page) - 1px);
+}
+.input--icon.is-filled { padding-left: calc(var(--sp-xxl) - 1px); }
 .input.is-error { border-color: var(--status-danger); border-width: var(--bw-thick); padding: 0 calc(var(--sp-page) - 1px); }
 .input[disabled] { background: var(--bg-disabled); color: var(--text-disabled); border-color: var(--bg-disabled); }
 .input--md { height: var(--h-ctrl-md); }
@@ -667,16 +670,48 @@ html[data-rm="1"] .field.is-rejected { animation: none; }
 .tabpane { opacity: 1; transition: opacity var(--d4) var(--enter); }
 .tabpane.is-out { opacity: 0; transition: opacity var(--d2) var(--exit); }
 
-/* ---------------- 19. 로그인 A0 ---------------- */
-.login { flex: 1; display: flex; flex-direction: column; padding: 0 var(--sp-page) var(--sp-lg); overflow-y: auto; }
-.login__brand { margin: var(--sp-xxl) 0 var(--sp-xl); padding-top: var(--sp-xxl); }
-.login__logo { display: flex; align-items: center; gap: var(--sp-xs); color: var(--main-primary); }
-.login__word { font-size: var(--fs-display); font-weight: var(--fw-display); letter-spacing: var(--ls-display); color: var(--text-primary); }
-.login__tag { margin-top: var(--sp-xs); color: var(--text-secondary); font-size: var(--fs-sm); }
-.login__social { display: grid; gap: var(--sp-xs); margin-top: var(--sp-lg); }
-.btn--social { background: var(--bg-default); border: var(--bw-thin) solid var(--border-default); color: var(--text-primary); }
-.btn--social:active { background: var(--bg-default); }
-.login__foot { margin-top: auto; padding-top: var(--sp-lg); text-align: center; color: var(--text-tertiary); }
+/* ---------------- 19. 로그인 A0 (피그마 712:9161 스플래시형) ---------------- */
+.login { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.login__hero {
+  flex: none; height: 300px; background: var(--tam-body);
+  display: flex; align-items: flex-end; justify-content: center;
+}
+.tami { width: 100%; height: 100%; overflow: visible; }
+.tami__face path { fill: none; stroke: var(--tam-ink); stroke-width: 10; stroke-linecap: round; }
+.tami__eye { fill: var(--tam-ink); }
+.tami__nose { fill: var(--tam-ink); stroke: var(--tam-ink); stroke-width: 6; stroke-linejoin: round; }
+.tami__cheek { fill: var(--tam-muzzle); }
+.tami__paw path { fill: var(--tam-body); filter: drop-shadow(0 2px 3px var(--alpha-ink-12)); }
+.tami__paw .tami__toe { fill: none; stroke: var(--main-primary-pressed); stroke-width: 5; stroke-linecap: round; opacity: .55; filter: none; }
+.login__body { flex: 1; display: flex; flex-direction: column; padding: 0 var(--sp-page) var(--sp-xl); }
+.login__brand { text-align: center; margin: var(--sp-xxl) 0; }
+.wm { font-size: var(--fs-display); font-weight: var(--fw-display); letter-spacing: var(--ls-display); color: var(--text-primary); }
+.wm--lg { font-size: var(--fs-wm-lg); }
+.wm__o { position: relative; }
+.wm__o::after {
+  content: ""; position: absolute; left: 50%; top: 0;
+  width: var(--sp-xs); height: var(--sp-xs); border-radius: 50%;
+  background: var(--main-primary);
+  transform: translate(-50%, -60%) rotate(0deg);
+}
+.login__tag {
+  margin-top: var(--sp-sm); color: var(--text-primary);
+  font-size: var(--fs-heading-lg); font-weight: var(--fw-bold); line-height: var(--lh-heading-lg);
+}
+.login__social { display: grid; gap: var(--sp-sm); margin-top: auto; }
+.btn--kakao { background: var(--brand-kakao); color: var(--brand-kakao-label); gap: var(--sp-xs); }
+.btn--kakao:active { background: var(--brand-kakao); }
+.btn--naver { background: var(--brand-naver); color: var(--text-on-button); gap: var(--sp-xs); }
+.btn--naver:active { background: var(--brand-naver); }
+.btn--google { background: var(--bg-default); border: var(--bw-thin) solid var(--border-default); color: var(--text-primary); gap: var(--sp-xs); }
+.btn--google:active { background: var(--bg-surface); }
+.g-red { fill: var(--brand-google-red); }
+.g-blue { fill: var(--brand-google-blue); }
+.g-yellow { fill: var(--brand-google-yellow); }
+.g-green { fill: var(--brand-google-green); }
+.login__links { display: flex; align-items: center; justify-content: center; gap: var(--sp-lg); margin-top: var(--sp-lg); }
+.login__link { color: var(--text-secondary); font-size: var(--fs-sm); min-height: var(--touch-min); }
+.login__sep { width: var(--bw-thin); height: var(--sp-sm); background: var(--border-default); }
 
 /* ---------------- 20. 온보딩 ---------------- */
 .stepbar { flex: none; height: var(--sp-xxs); background: var(--bg-disabled); margin: 0 var(--sp-page); border-radius: var(--r-sm); overflow: hidden; }
@@ -701,6 +736,22 @@ html[data-rm="1"] .field.is-rejected { animation: none; }
 .gbtn--soso.is-on { background: var(--grade-soso); color: var(--text-on-button); }
 .gbtn--bad { background: var(--grade-bad-bg); color: var(--grade-bad); }
 .gbtn--bad.is-on { background: var(--grade-bad); color: var(--text-on-button); }
+
+/* ON2 (피그마 712:9161 온보딩 행): 카드 중앙 + 등급 3버튼 가로 배치 */
+.body--ob2 { display: flex; flex-direction: column; justify-content: center; }
+.ob-card--center { text-align: center; }
+.ob-card--center .ob-card__photo { height: 120px; width: 60%; margin: 0 auto var(--sp-md); }
+.ob2-q { text-align: center; font-size: var(--fs-heading-lg); font-weight: var(--fw-bold); line-height: var(--lh-heading-lg); margin: var(--sp-lg) 0 var(--sp-md); }
+.ob-grades--row { grid-template-columns: repeat(3, 1fr); }
+.gbtn--sm { height: var(--h-ctrl-sm); border-radius: var(--r-md); font-size: var(--fs-sm); }
+.btn--soft-gray { background: var(--bg-surface); color: var(--text-secondary); }
+.btn--soft-gray:active { background: var(--bg-disabled); }
+.cta-dock--ob { display: grid; gap: var(--sp-sm); border-top: 0; }
+.ob-skip {
+  justify-self: center; color: var(--text-secondary); font-size: var(--fs-sm);
+  text-decoration: underline; text-underline-offset: var(--sp-xxs); min-height: var(--icon-md);
+}
+.ob-addlink { color: var(--main-primary); font-size: var(--fs-sm); text-decoration: underline; text-underline-offset: var(--sp-xxs); }
 
 /* ---------------- 21. 탐색(지도) ---------------- */
 .map {
@@ -805,7 +856,11 @@ html[data-rm="1"] .field.is-rejected { animation: none; }
 .sect__title { padding: 0 var(--sp-page) var(--sp-xs); font-size: var(--fs-lg); font-weight: var(--fw-semibold); }
 
 /* ---------------- 23. 기록 플로우 ---------------- */
-.scr--modal { z-index: var(--z-modal); background: var(--bg-default); border-radius: var(--r-lg) var(--r-lg) 0 0; }
+.scr--modal {
+  top: var(--sp-xxl); z-index: var(--z-modal);
+  background: var(--bg-default); border-radius: var(--r-lg) var(--r-lg) 0 0;
+  box-shadow: var(--shadow-lg);
+}
 .rec-step { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
 .rec-cards { flex: 1; display: grid; grid-template-rows: 1fr auto 1fr; gap: var(--sp-sm); padding: var(--sp-md) var(--sp-page); }
 .rec-card {
@@ -857,8 +912,8 @@ html[data-rm="1"] .field.is-rejected { animation: none; }
 .seg-lg.is-on { color: var(--text-primary); }
 .segs--sub { gap: var(--sp-md); border-bottom: var(--bw-thin) solid var(--border-default); }
 .segs--sub .seg { font-size: var(--fs-sm); }
-.body.is-fadeout, #profPane.is-fadeout { opacity: 0; transition: opacity var(--d2) var(--exit); }
-.body, #profPane { transition: opacity var(--d4) var(--enter); }
+.body.is-fadeout, #profPane.is-fadeout, #rankList.is-fadeout { opacity: 0; transition: opacity var(--d2) var(--exit); }
+.body, #profPane, #rankList { transition: opacity var(--d4) var(--enter); }
 
 .mycard {
   display: flex; align-items: center; gap: var(--sp-sm);
